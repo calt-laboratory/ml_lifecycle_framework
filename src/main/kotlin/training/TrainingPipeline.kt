@@ -2,7 +2,6 @@ package training
 
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
-import smile.classification.LogisticRegression
 import smile.validation.metric.Accuracy
 import util.PATH_TO_DATASET
 import util.SEED
@@ -29,8 +28,14 @@ fun trainingPipeline() {
     val yTrainIntArray = yTrain.toIntArray()
     val yTestIntArray = yTest.toIntArray()
 
-    val fittedLogisticRegressionModel = LogisticRegression.fit(xTrainDoubleArray, yTrainIntArray)
-    val predictions = fittedLogisticRegressionModel.predict(xTestDoubleArray)
+    // Train the model
+    val logisticRegression = LogisticRegressionModel()
+    logisticRegression.fit(xTrain = xTrainDoubleArray, yTrain = yTrainIntArray)
+
+    // Calculate y-predictions based on the x-test set
+    val predictions = logisticRegression.predictModel(xTest = xTestDoubleArray)
+
+    // Calculate accuracy of y-predictions compared to y-test set
     val accuracy = Accuracy.of(yTestIntArray, predictions)
     println("Accuracy: $accuracy")
 }
