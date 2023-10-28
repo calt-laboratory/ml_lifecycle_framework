@@ -12,7 +12,9 @@ import kotlin.random.Random
 data class PreProcessedDataset(val df: DataFrame<Any?>, val xData: DataFrame<Any?>, val yData: DataColumn<*>)
 
 /**
- *
+ * Removes the id column and maps the diagnosis column to 0 and 1.
+ * @param df Original dataframe
+ * @return PreProcessedDataset Contains the dataframe, the features and the target
  */
 fun dataPreProcessing(df: DataFrame<*>): PreProcessedDataset {
     // Remove id column
@@ -32,6 +34,14 @@ data class SplitData(
     val yTest: DataColumn<Any?>
 )
 
+/**
+ * Splits the data into train and test sets.
+ * @param xData Features
+ * @param yData Target
+ * @param testSize Size of the test set
+ * @param randomState Random state used to create the random indices
+ * @return SplitData Contains the train and test sets for features and target
+ */
 fun trainTestSplit(xData: DataFrame<Any?>, yData: DataColumn<*>, testSize: Double, randomState: Int): SplitData {
     val random = Random(seed = randomState)
     // Create random indices (= integers) aligned w/ the number of rows in the dataframe

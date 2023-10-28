@@ -11,7 +11,9 @@ import util.readDataFrameCSV
 import util.toDoubleArray
 import util.toIntArray
 
-@Deprecated("Dont use this anymore")
+/**
+ * Comprises all preprocessing steps and the training of the model.
+ */
 fun trainingPipeline() {
     val data = readDataFrameCSV(path = PATH_TO_DATASET)
 
