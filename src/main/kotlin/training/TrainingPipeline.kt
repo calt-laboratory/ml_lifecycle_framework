@@ -1,8 +1,8 @@
 package training
 
+//import smile.validation.metric.Accuracy
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
-import smile.validation.metric.Accuracy
 import util.PATH_TO_DATASET
 import util.SEED
 import util.TEST_SIZE
@@ -36,6 +36,6 @@ fun trainingPipeline() {
     val predictions = logisticRegression.predictModel(xTest = xTestDoubleArray)
 
     // Calculate accuracy of y-predictions compared to y-test set
-    val accuracy = Accuracy.of(yTestIntArray, predictions)
+    val accuracy = calculateAccuracy(y_true = yTestIntArray, y_pred = predictions)
     println("Accuracy: $accuracy")
 }
