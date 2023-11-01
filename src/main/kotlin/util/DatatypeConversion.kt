@@ -15,7 +15,7 @@ fun <T> DataRow<T>.columnsAsDoubleArray(): DoubleArray {
 /**
  * Extension function to convert Kotlin DataFrame type to a 2D array of doubles.
  */
-fun <Type> DataFrame<Type>.toDoubleArray(): Array<DoubleArray> {
+fun <T> DataFrame<T>.toDoubleArray(): Array<DoubleArray> {
     return this.rows()
         .map { it.columnsAsDoubleArray() }
         .toTypedArray()
