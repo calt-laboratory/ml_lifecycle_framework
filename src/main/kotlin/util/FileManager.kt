@@ -11,3 +11,10 @@ import org.jetbrains.kotlinx.dataframe.io.readCSV
 fun readDataFrameCSV(path: String): DataFrame<*> {
     return DataFrame.readCSV(path)
 }
+
+
+fun readCSVWithSmile(path: String): smile.data.DataFrame  {
+    val df = smile.read.csv(path)
+    println(df.structure())
+    return df
+}
