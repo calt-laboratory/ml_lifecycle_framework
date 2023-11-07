@@ -28,22 +28,3 @@ fun <T> DataFrame<T>.toDoubleArray(): Array<DoubleArray> {
 fun <T> DataColumn<T>.toIntArray(): IntArray {
     return values().map { it.toString().toInt() }.toIntArray()
 }
-
-
-fun convertKotlinDFToSmileDF(df: DataFrame<Any?>): smile.data.DataFrame {
-    val numCols = df.columnsCount()
-    val numRows = df.rows().count()
-//    val attributes = Array(numCols) { NominalScale("Column $it") }
-
-    val data = Array(numCols) { DoubleArray(numRows) }
-
-    for (col in 0 until numCols) {
-        for (row in 0 until numRows) {
-            val value = df[row, col] as Double
-            data[col][row] = value
-        }
-    }
-
-    val smileDf = smile.data.DataFrame.of(data)
-    return smileDf
-}
