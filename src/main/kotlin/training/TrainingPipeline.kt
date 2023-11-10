@@ -1,13 +1,9 @@
 package training
 
-//import smile.validation.metric.Accuracy
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForSmile
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import smile.base.cart.SplitRule
-import smile.classification.cart
-import smile.data.formula.Formula
 import util.PATH_TO_DATASET
 import util.PATH_TO_PREPROCESSED_DATASET
 import util.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
@@ -69,23 +65,16 @@ fun trainingPipelineWithSmile() {
     storeDataFrameAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
     storeDataFrameAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     storeDataFrameAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
-//    storeDataFrameAsCSV(df = xTestData, path = PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA)
     storeDataFrameAsCSV(df = yTestData.toDataFrame(), path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
     Thread.sleep(3000)
 
-    println("train data: $trainData")
-    println("train data: $testData")
-
     val preProcessedTrainData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     val preProcessedTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TEST_DATASET)
-//    val preProcessedXTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA)
     val preProcessedYTestData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
-    val model = cart(Formula.lhs("diagnosis"), preProcessedTrainData, SplitRule.GINI, 20, 0, 5)
-
-    // Todo: Find out how to predict the model
+    val model = DecisionTreeClassifier()
+    model.fit(trainDF = preProcessedTrainData)
     val predictions = model.predict(preProcessedTestData)
     val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)
     println("Accuracy: $acc")
-    println("Predictions: ${predictions.joinToString()}")
 }
