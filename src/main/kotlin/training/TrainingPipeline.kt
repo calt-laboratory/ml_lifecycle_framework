@@ -10,6 +10,7 @@ import smile.classification.cart
 import smile.data.formula.Formula
 import util.PATH_TO_DATASET
 import util.PATH_TO_PREPROCESSED_DATASET
+import util.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
 import util.PATH_TO_PREPROCESSED_TEST_DATASET
 import util.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import util.PATH_TO_PREPROCESSED_X_DATA
@@ -64,10 +65,12 @@ fun trainingPipelineWithSmile() {
     val data = readDataFrameAsCSV(path = PATH_TO_DATASET)
     val (preProcessedDF, _, _) = dataPreProcessing(df = data)
 
-    val (trainData, testData) = trainTestSplitForSmile(data = preProcessedDF, testSize = TEST_SIZE, randomState = SEED)
+    val (trainData, testData, _, yTestData) = trainTestSplitForSmile(data = preProcessedDF, testSize = TEST_SIZE, randomState = SEED)
     storeDataFrameAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
     storeDataFrameAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     storeDataFrameAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
+//    storeDataFrameAsCSV(df = xTestData, path = PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA)
+    storeDataFrameAsCSV(df = yTestData.toDataFrame(), path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
     Thread.sleep(3000)
 
     println("train data: $trainData")
@@ -75,10 +78,14 @@ fun trainingPipelineWithSmile() {
 
     val preProcessedTrainData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     val preProcessedTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TEST_DATASET)
+//    val preProcessedXTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA)
+    val preProcessedYTestData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
     val model = cart(Formula.lhs("diagnosis"), preProcessedTrainData, SplitRule.GINI, 20, 0, 5)
 
     // Todo: Find out how to predict the model
-    val prediction = model.predict(preProcessedTestData)
-    println(prediction)
+    val predictions = model.predict(preProcessedTestData)
+    val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)
+    println("Accuracy: $acc")
+    println("Predictions: ${predictions.joinToString()}")
 }

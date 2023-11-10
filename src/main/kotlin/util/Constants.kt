@@ -11,6 +11,8 @@ const val PATH_TO_PREPROCESSED_TEST_DATASET = "src/main/resources/preprocessed_d
 
 const val PATH_TO_PREPROCESSED_X_DATA = "src/main/resources/preprocessed_datasets/x_data_preprocessed_breast_cancer_classification.csv"
 const val PATH_TO_PREPROCESSED_Y_DATA = "src/main/resources/preprocessed_datasets/y_data_preprocessed_breast_cancer_classification.csv"
+const val PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA = "src/main/resources/preprocessed_datasets/x_smile_test_data_preprocessed_breast_cancer_classification.csv"
+const val PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA = "src/main/resources/preprocessed_datasets/y_smile_test_data_preprocessed_breast_cancer_classification.csv"
 
 const val SEED = 42
 const val TEST_SIZE = 0.2
