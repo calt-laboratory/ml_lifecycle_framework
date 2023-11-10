@@ -15,7 +15,6 @@ fun readDataFrameAsCSV(path: String): DataFrame<*> {
     return DataFrame.readCSV(path)
 }
 
-
 fun storeDataFrameAsCSV(df: DataFrame<*>, path: String) {
     df.writeCSV(path = path)
 }
@@ -25,9 +24,6 @@ fun storeTargetAsCSV(target: DataColumn<*>, path: String) {
     df.writeCSV(path = path)
 }
 
-
 fun readCSVWithSmile(path: String): smile.data.DataFrame  {
-    val df = smile.read.csv(path)
-    println(df.structure())
-    return df
+    return smile.read.csv(path)
 }
