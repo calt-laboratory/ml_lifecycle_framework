@@ -61,3 +61,19 @@ fun trainTestSplit(xData: DataFrame<Any?>, yData: DataColumn<*>, testSize: Doubl
 
     return SplitData(xTrain, xTest, yTrain, yTest)
 }
+
+data class SplitDataForSmile(val trainData: DataFrame<Any?>, val testData: DataFrame<Any?>)
+
+fun trainTestSplitForSmile(data: DataFrame<*>, testSize: Double, randomState: Int): SplitDataForSmile {
+    val random = Random(seed = randomState)
+    val indices = (0 until data.rowsCount()).shuffled(random)
+    val splitIndex = (data.rowsCount() * (1 - testSize)).toInt()
+
+    val trainIndices = indices.subList(0, splitIndex)
+    val testIndices = indices.subList(splitIndex, data.rowsCount())
+
+    val trainData = data[trainIndices]
+    val testData = data[testIndices]
+
+    return SplitDataForSmile(trainData, testData)
+}
