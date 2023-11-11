@@ -83,6 +83,11 @@ fun trainingPipelineWithSmile() {
         val model = RandomForestClassifier()
         model.fit(trainDF = preProcessedTrainData)
         predictions = model.predict(preProcessedTestData)
+    } else if (ALGORITHM == "AdaBoost") {
+        val model = AdaBoostClassifier()
+        model.fit(trainDF = preProcessedTrainData)
+        predictions = model.predict(preProcessedTestData)
+
     }
     val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)
     println("Accuracy: $acc")

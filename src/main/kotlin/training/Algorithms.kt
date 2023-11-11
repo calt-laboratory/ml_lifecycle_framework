@@ -1,9 +1,11 @@
 package training
 
 import smile.base.cart.SplitRule
+import smile.classification.AdaBoost
 import smile.classification.DecisionTree
 import smile.classification.LogisticRegression
 import smile.classification.RandomForest
+import smile.classification.adaboost
 import smile.classification.cart
 import smile.classification.randomForest
 import smile.data.formula.Formula
@@ -71,6 +73,28 @@ class RandomForestClassifier : EnsembleClassifier() {
     }
 
     override fun predict(testDF: smile.data.DataFrame) : IntArray {
+        val predictions = model.predict(testDF)
+        return predictions
+    }
+}
+
+class AdaBoostClassifier : EnsembleClassifier() {
+
+    private var model: AdaBoost? = null
+
+    override fun fit(trainDF: smile.data.DataFrame) {
+        model = adaboost(
+            formula = Formula.lhs("diagnosis"),
+            data = trainDF,
+            ntrees = 500,
+            maxDepth = 20,
+            maxNodes = 6,
+            nodeSize = 1,
+            )
+    }
+
+    override fun predict(testDF: smile.data.DataFrame) : IntArray {
+        val model = requireNotNull(model) { "Model is not fitted yet." }
         val predictions = model.predict(testDF)
         return predictions
     }
