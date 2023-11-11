@@ -16,3 +16,5 @@ const val PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA = "src/main/resources/preproces
 
 const val SEED = 42
 const val TEST_SIZE = 0.2
+
+const val ALGORITHM = "RandomForest"

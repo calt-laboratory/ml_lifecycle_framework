@@ -4,6 +4,7 @@ import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForSmile
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import util.ALGORITHM
 import util.PATH_TO_DATASET
 import util.PATH_TO_PREPROCESSED_DATASET
 import util.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
@@ -72,9 +73,17 @@ fun trainingPipelineWithSmile() {
     val preProcessedTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TEST_DATASET)
     val preProcessedYTestData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
-    val model = DecisionTreeClassifier()
-    model.fit(trainDF = preProcessedTrainData)
-    val predictions = model.predict(preProcessedTestData)
+    var predictions = intArrayOf()
+
+    if (ALGORITHM == "DecisionTree") {
+        val model = DecisionTreeClassifier()
+        model.fit(trainDF = preProcessedTrainData)
+        predictions = model.predict(preProcessedTestData)
+    } else if (ALGORITHM == "RandomForest") {
+        val model = RandomForestClassifier()
+        model.fit(trainDF = preProcessedTrainData)
+        predictions = model.predict(preProcessedTestData)
+    }
     val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)
     println("Accuracy: $acc")
 }

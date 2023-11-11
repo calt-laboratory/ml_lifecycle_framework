@@ -3,7 +3,9 @@ package training
 import smile.base.cart.SplitRule
 import smile.classification.DecisionTree
 import smile.classification.LogisticRegression
+import smile.classification.RandomForest
 import smile.classification.cart
+import smile.classification.randomForest
 import smile.data.formula.Formula
 
 abstract class ClassificationAlgorithm {
@@ -41,9 +43,34 @@ class DecisionTreeClassifier : EnsembleClassifier() {
     private lateinit var model: DecisionTree
 
     override fun fit(trainDF: smile.data.DataFrame) {
-        model = cart(Formula.lhs("diagnosis"), trainDF, SplitRule.GINI, 20, 0, 5)
+        model = cart(
+            formula = Formula.lhs("diagnosis"),
+            data = trainDF,
+            splitRule = SplitRule.GINI,
+            maxDepth = 20,
+            maxNodes = 0,
+            nodeSize = 5,
+        )
     }
     override fun predict(testDF: smile.data.DataFrame): IntArray {
+        val predictions = model.predict(testDF)
+        return predictions
+    }
+}
+
+class RandomForestClassifier : EnsembleClassifier() {
+
+    private lateinit var model: RandomForest
+    override fun fit(trainDF: smile.data.DataFrame) {
+        model = randomForest(
+            formula = Formula.lhs("diagnosis"),
+            data = trainDF,
+            ntrees = 500,
+            splitRule = SplitRule.GINI,
+            )
+    }
+
+    override fun predict(testDF: smile.data.DataFrame) : IntArray {
         val predictions = model.predict(testDF)
         return predictions
     }
