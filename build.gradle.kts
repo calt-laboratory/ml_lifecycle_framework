@@ -29,6 +29,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:multik-core:0.2.2")
     implementation("org.jetbrains.kotlinx:multik-default:0.2.2")
     implementation("com.github.haifengl:smile-kotlin:3.0.1")
+    implementation("com.azure:azure-storage-blob:12.10.0")
 
     testImplementation(kotlin("test"))
 }

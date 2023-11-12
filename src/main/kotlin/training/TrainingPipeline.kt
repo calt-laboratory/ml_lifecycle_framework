@@ -87,7 +87,6 @@ fun trainingPipelineWithSmile() {
         val model = AdaBoostClassifier()
         model.fit(trainDF = preProcessedTrainData)
         predictions = model.predict(preProcessedTestData)
-
     }
     val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)
     println("Accuracy: $acc")
