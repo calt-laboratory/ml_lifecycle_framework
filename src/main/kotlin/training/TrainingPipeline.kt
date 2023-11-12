@@ -1,10 +1,10 @@
 package training
 
+import config.readYamlConfig
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForSmile
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import util.ALGORITHM
 import util.PATH_TO_DATASET
 import util.PATH_TO_PREPROCESSED_DATASET
 import util.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
@@ -12,6 +12,7 @@ import util.PATH_TO_PREPROCESSED_TEST_DATASET
 import util.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import util.PATH_TO_PREPROCESSED_X_DATA
 import util.PATH_TO_PREPROCESSED_Y_DATA
+import util.PATH_TO_YAML_CONFIG
 import util.SEED
 import util.TEST_SIZE
 import util.readCSVWithSmile
@@ -73,20 +74,27 @@ fun trainingPipelineWithSmile() {
     val preProcessedTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TEST_DATASET)
     val preProcessedYTestData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
+    // Read config yaml file
+    val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
     var predictions = intArrayOf()
 
-    if (ALGORITHM == "DecisionTree") {
+    // TODO: Implement logger to replace print statements
+
+    if (cfg.train.algorithm == "decisionTree") {
         val model = DecisionTreeClassifier()
         model.fit(trainDF = preProcessedTrainData)
         predictions = model.predict(preProcessedTestData)
-    } else if (ALGORITHM == "RandomForest") {
+        println("Decision Tree")
+    } else if (cfg.train.algorithm  == "randomForest") {
         val model = RandomForestClassifier()
         model.fit(trainDF = preProcessedTrainData)
         predictions = model.predict(preProcessedTestData)
-    } else if (ALGORITHM == "AdaBoost") {
+        println("Random Forest")
+    } else if (cfg.train.algorithm  == "adaBoost") {
         val model = AdaBoostClassifier()
         model.fit(trainDF = preProcessedTrainData)
         predictions = model.predict(preProcessedTestData)
+        println("AdaBoost")
     }
     val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)
     println("Accuracy: $acc")

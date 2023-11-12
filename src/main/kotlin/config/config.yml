@@ -1,0 +1,21 @@
+train:
+  algorithm: "adaBoost"
+  # "decisionTree", "randomForest", "adaBoost"
+
+  decisionTree:
+    maxDepth: 20
+    maxNodes: 0
+    nodeSize: 5
+
+  randomForest:
+    nTrees: 500
+
+  adaBoost:
+    nTrees: 500
+    maxDepth: 20
+    maxNodes: 6
+    nodeSize: 1
+
+preProcessing:
+  seed: 42
+  testSize: 0.2
