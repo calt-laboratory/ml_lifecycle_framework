@@ -91,19 +91,19 @@ fun trainingPipelineWithSmile() {
     // TODO: Implement logger to replace print statements
 
     if (cfg.train.algorithm == "decisionTree") {
-        val model = DecisionTreeClassifier()
+        val model = DecisionTreeClassifier(cfg = cfg)
         model.fit(trainDF = preProcessedTrainData)
-        predictions = model.predict(preProcessedTestData)
+        predictions = model.predict(testDF = preProcessedTestData)
         println("Decision Tree")
     } else if (cfg.train.algorithm  == "randomForest") {
-        val model = RandomForestClassifier()
+        val model = RandomForestClassifier(cfg = cfg)
         model.fit(trainDF = preProcessedTrainData)
-        predictions = model.predict(preProcessedTestData)
+        predictions = model.predict(testDF = preProcessedTestData)
         println("Random Forest")
     } else if (cfg.train.algorithm  == "adaBoost") {
-        val model = AdaBoostClassifier()
+        val model = AdaBoostClassifier(cfg = cfg)
         model.fit(trainDF = preProcessedTrainData)
-        predictions = model.predict(preProcessedTestData)
+        predictions = model.predict(testDF = preProcessedTestData)
         println("AdaBoost")
     }
     val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)

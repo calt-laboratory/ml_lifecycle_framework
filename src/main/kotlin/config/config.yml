@@ -1,5 +1,5 @@
 train:
-  algorithm: "adaBoost"
+  algorithm: "decisionTree"
   # "decisionTree", "randomForest", "adaBoost"
 
   decisionTree:
@@ -9,6 +9,13 @@ train:
 
   randomForest:
     nTrees: 500
+    mtry: 0
+    maxDepth: 20
+    maxNodes: 500
+    nodeSize: 1
+    subsample: 1.0
+    classWeight: null
+    seeds: null
 
   adaBoost:
     nTrees: 500

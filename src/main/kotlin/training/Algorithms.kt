@@ -1,5 +1,6 @@
 package training
 
+import config.Config
 import smile.base.cart.SplitRule
 import smile.classification.AdaBoost
 import smile.classification.DecisionTree
@@ -33,14 +34,14 @@ class LogisticRegressionModel : ClassificationAlgorithm() {
     }
 }
 
-abstract class EnsembleClassifier {
+abstract class EnsembleClassifier(val cfg: Config) {
 
     abstract fun fit(trainDF: smile.data.DataFrame)
 
     abstract fun predict(testDF: smile.data.DataFrame): IntArray
 }
 
-class DecisionTreeClassifier : EnsembleClassifier() {
+class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 
     private lateinit var model: DecisionTree
 
@@ -49,9 +50,9 @@ class DecisionTreeClassifier : EnsembleClassifier() {
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
             splitRule = SplitRule.GINI,
-            maxDepth = 20,
-            maxNodes = 0,
-            nodeSize = 5,
+            maxDepth = cfg.train.decisionTree.maxDepth,
+            maxNodes = cfg.train.decisionTree.maxNodes,
+            nodeSize = cfg.train.decisionTree.nodeSize,
         )
     }
     override fun predict(testDF: smile.data.DataFrame): IntArray {
@@ -60,15 +61,22 @@ class DecisionTreeClassifier : EnsembleClassifier() {
     }
 }
 
-class RandomForestClassifier : EnsembleClassifier() {
+class RandomForestClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 
     private lateinit var model: RandomForest
     override fun fit(trainDF: smile.data.DataFrame) {
         model = randomForest(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            ntrees = 500,
+            ntrees = cfg.train.randomForest.nTrees,
+            mtry = cfg.train.randomForest.mtry,
             splitRule = SplitRule.GINI,
+            maxDepth = cfg.train.randomForest.maxDepth,
+            maxNodes = cfg.train.randomForest.maxNodes,
+            nodeSize = cfg.train.randomForest.nodeSize,
+            subsample = cfg.train.randomForest.subsample,
+            classWeight = cfg.train.randomForest.classWeight,
+            seeds = cfg.train.randomForest.seeds,
             )
     }
 
@@ -78,7 +86,7 @@ class RandomForestClassifier : EnsembleClassifier() {
     }
 }
 
-class AdaBoostClassifier : EnsembleClassifier() {
+class AdaBoostClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 
     private var model: AdaBoost? = null
 
