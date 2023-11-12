@@ -44,10 +44,9 @@ data class Config(
     val preProcessing: PreProcessingConfig,
 )
 
-fun readYamlConfig(filePath: String) : Config {
-    val parsedYaml = Yaml.default.decodeFromString(
+fun readYamlConfig(filePath: String): Config {
+    return Yaml.default.decodeFromString(
         Config.serializer(),
         Path.of(filePath).toFile().readText()
     )
-    return parsedYaml
 }

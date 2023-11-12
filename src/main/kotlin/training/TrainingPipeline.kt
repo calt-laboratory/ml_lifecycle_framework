@@ -13,8 +13,6 @@ import util.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import util.PATH_TO_PREPROCESSED_X_DATA
 import util.PATH_TO_PREPROCESSED_Y_DATA
 import util.PATH_TO_YAML_CONFIG
-import util.SEED
-import util.TEST_SIZE
 import util.readCSVWithSmile
 import util.readDataFrameAsCSV
 import util.storeDataFrameAsCSV
@@ -25,6 +23,9 @@ import util.toIntArray
  * Comprises all preprocessing steps and the training of the model.
  */
 fun trainingPipeline() {
+    // Read config yaml file
+    val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
+
     val data = readDataFrameAsCSV(path = PATH_TO_DATASET)
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
 
@@ -36,7 +37,12 @@ fun trainingPipeline() {
     val prePreProcessedXData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_X_DATA)
     val prePreProcessedYData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_Y_DATA)
 
-    val (xTrain, xTest, yTrain, yTest) = trainTestSplit(xData = prePreProcessedXData, yData = prePreProcessedYData["diagnosis"], testSize = TEST_SIZE, randomState = SEED)
+    val (xTrain, xTest, yTrain, yTest) = trainTestSplit(
+        xData = prePreProcessedXData,
+        yData = prePreProcessedYData["diagnosis"],
+        testSize = cfg.preProcessing.testSize,
+        randomState = cfg.preProcessing.seed,
+    )
 
     // Convert training dataframes of type Kotlin DataFrame to make them compatible with Smile
     val xTrainDoubleArray = xTrain.toDoubleArray()
@@ -59,11 +65,17 @@ fun trainingPipeline() {
 }
 
 fun trainingPipelineWithSmile() {
+    // Read config yaml file
+    val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
 
     val data = readDataFrameAsCSV(path = PATH_TO_DATASET)
     val (preProcessedDF, _, _) = dataPreProcessing(df = data)
 
-    val (trainData, testData, _, yTestData) = trainTestSplitForSmile(data = preProcessedDF, testSize = TEST_SIZE, randomState = SEED)
+    val (trainData, testData, _, yTestData) = trainTestSplitForSmile(
+        data = preProcessedDF,
+        testSize = cfg.preProcessing.testSize,
+        randomState = cfg.preProcessing.seed,
+    )
     storeDataFrameAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
     storeDataFrameAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     storeDataFrameAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
@@ -74,8 +86,6 @@ fun trainingPipelineWithSmile() {
     val preProcessedTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TEST_DATASET)
     val preProcessedYTestData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
-    // Read config yaml file
-    val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
     var predictions = intArrayOf()
 
     // TODO: Implement logger to replace print statements

@@ -15,6 +15,3 @@ const val PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA = "src/main/resources/preproces
 const val PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA = "src/main/resources/preprocessed_datasets/y_smile_test_data_preprocessed_breast_cancer_classification.csv"
 
 const val PATH_TO_YAML_CONFIG = "src/main/kotlin/config/config.yml"
-
-const val SEED = 42
-const val TEST_SIZE = 0.2
