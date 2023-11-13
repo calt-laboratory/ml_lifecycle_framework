@@ -1,5 +1,7 @@
 package training
 
+import azure.downloadFileFromBlob
+import azure.getBlobClientConnection
 import config.readYamlConfig
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
@@ -13,6 +15,9 @@ import util.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import util.PATH_TO_PREPROCESSED_X_DATA
 import util.PATH_TO_PREPROCESSED_Y_DATA
 import util.PATH_TO_YAML_CONFIG
+import util.RAW_DATA_BLOB_CONTAINER_NAME
+import util.RAW_FILE_NAME
+import util.STORAGE_CONNECTION_STRING
 import util.readCSVWithSmile
 import util.readDataFrameAsCSV
 import util.storeDataFrameAsCSV
@@ -26,8 +31,17 @@ fun trainingPipeline() {
     // Read config yaml file
     val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
 
+    val blobClient = getBlobClientConnection(
+        storageConnectionString = STORAGE_CONNECTION_STRING,
+        blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
+        fileName = RAW_FILE_NAME,
+    )
+    downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+
     val data = readDataFrameAsCSV(path = PATH_TO_DATASET)
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
+
+    // TODO: Implement connection to Blob to store preprocessed data there
 
     storeDataFrameAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
     storeDataFrameAsCSV(df = xData, path = PATH_TO_PREPROCESSED_X_DATA)
@@ -64,9 +78,16 @@ fun trainingPipeline() {
     println("Accuracy: $accuracy")
 }
 
-fun trainingPipelineWithSmile() {
+fun trainingPipelineForEnsembleClassifiers() {
     // Read config yaml file
     val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
+
+    val blobClient = getBlobClientConnection(
+        storageConnectionString = STORAGE_CONNECTION_STRING,
+        blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
+        fileName = RAW_FILE_NAME,
+    )
+    downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
 
     val data = readDataFrameAsCSV(path = PATH_TO_DATASET)
     val (preProcessedDF, _, _) = dataPreProcessing(df = data)
@@ -76,6 +97,9 @@ fun trainingPipelineWithSmile() {
         testSize = cfg.preProcessing.testSize,
         randomState = cfg.preProcessing.seed,
     )
+
+    // TODO: Implement connection to Blob to store preprocessed data there
+
     storeDataFrameAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
     storeDataFrameAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     storeDataFrameAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
@@ -89,6 +113,7 @@ fun trainingPipelineWithSmile() {
     var predictions = intArrayOf()
 
     // TODO: Implement logger to replace print statements
+    // TODO: Replace if w/ when
 
     if (cfg.train.algorithm == "decisionTree") {
         val model = DecisionTreeClassifier(cfg = cfg)

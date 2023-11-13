@@ -41,6 +41,7 @@ abstract class EnsembleClassifier(val cfg: Config) {
     abstract fun predict(testDF: smile.data.DataFrame): IntArray
 }
 
+// TODO: Add SplitRule as yaml config param in DecisionTreeClassifier and RandomForestClassifier
 class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 
     private lateinit var model: DecisionTree
@@ -55,6 +56,7 @@ class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             nodeSize = cfg.train.decisionTree.nodeSize,
         )
     }
+
     override fun predict(testDF: smile.data.DataFrame): IntArray {
         val predictions = model.predict(testDF)
         return predictions
@@ -64,6 +66,7 @@ class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 class RandomForestClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 
     private lateinit var model: RandomForest
+
     override fun fit(trainDF: smile.data.DataFrame) {
         model = randomForest(
             formula = Formula.lhs("diagnosis"),

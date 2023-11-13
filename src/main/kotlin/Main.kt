@@ -1,7 +1,7 @@
 import training.trainingPipeline
-import training.trainingPipelineWithSmile
+import training.trainingPipelineForEnsembleClassifiers
 
 fun main() {
     trainingPipeline()
-    trainingPipelineWithSmile()
+    trainingPipelineForEnsembleClassifiers()
 }
