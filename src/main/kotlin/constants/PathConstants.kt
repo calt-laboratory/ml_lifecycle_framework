@@ -1,4 +1,4 @@
-package util
+package constants
 
 const val PATH_TO_DATASET = "src/main/resources/original_datasets/original_breast_cancer_classification.csv"
 // https://www.kaggle.com/datasets/vijayaadithyanvg/breast-cancer-prediction

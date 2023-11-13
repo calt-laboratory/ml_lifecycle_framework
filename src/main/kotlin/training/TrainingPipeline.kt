@@ -7,17 +7,17 @@ import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForSmile
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import util.PATH_TO_DATASET
-import util.PATH_TO_PREPROCESSED_DATASET
-import util.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
-import util.PATH_TO_PREPROCESSED_TEST_DATASET
-import util.PATH_TO_PREPROCESSED_TRAIN_DATASET
-import util.PATH_TO_PREPROCESSED_X_DATA
-import util.PATH_TO_PREPROCESSED_Y_DATA
-import util.PATH_TO_YAML_CONFIG
-import util.RAW_DATA_BLOB_CONTAINER_NAME
-import util.RAW_FILE_NAME
-import util.STORAGE_CONNECTION_STRING
+import constants.PATH_TO_DATASET
+import constants.PATH_TO_PREPROCESSED_DATASET
+import constants.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
+import constants.PATH_TO_PREPROCESSED_TEST_DATASET
+import constants.PATH_TO_PREPROCESSED_TRAIN_DATASET
+import constants.PATH_TO_PREPROCESSED_X_DATA
+import constants.PATH_TO_PREPROCESSED_Y_DATA
+import constants.PATH_TO_YAML_CONFIG
+import constants.RAW_DATA_BLOB_CONTAINER_NAME
+import constants.RAW_FILE_NAME
+import constants.STORAGE_CONNECTION_STRING
 import util.readCSVWithSmile
 import util.readDataFrameAsCSV
 import util.storeDataFrameAsCSV
@@ -74,7 +74,7 @@ fun trainingPipeline() {
     val predictions = logisticRegression.predictModel(xTest = xTestDoubleArray)
 
     // Calculate accuracy of y-predictions compared to y-test set
-    val accuracy = calculateAccuracy(y_true = yTestIntArray, y_pred = predictions)
+    val accuracy = calculateAccuracy(yTrue = yTestIntArray, yPred = predictions)
     println("Accuracy: $accuracy")
 }
 
@@ -131,6 +131,6 @@ fun trainingPipelineForEnsembleClassifiers() {
         predictions = model.predict(testDF = preProcessedTestData)
         println("AdaBoost")
     }
-    val acc = calculateAccuracy(y_true = preProcessedYTestData["diagnosis"].toIntArray(), y_pred = predictions)
+    val acc = calculateAccuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
     println("Accuracy: $acc")
 }
