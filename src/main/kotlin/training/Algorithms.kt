@@ -21,6 +21,8 @@ abstract class EnsembleClassifier(val cfg: Config) {
 }
 
 
+// TODO: Implement GBM
+// TODO: Implement Deep Learning Net using KotlinDL
 // TODO: Add SplitRule as yaml config param in DecisionTreeClassifier and RandomForestClassifier
 class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 

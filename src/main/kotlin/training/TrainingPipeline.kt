@@ -2,6 +2,7 @@ package training
 
 import azure.downloadFileFromBlob
 import azure.getBlobClientConnection
+import config.Config
 import config.readYamlConfig
 import constants.PATH_TO_DATASET
 import constants.PATH_TO_PREPROCESSED_DATASET
@@ -26,11 +27,23 @@ import util.toIntArray
 
 
 /**
- * Comprises all preprocessing steps and the training/prediction for a Smile model.
+ * Provides various training pipelines (e.g. for ensemble classifiers or logistic regression).
  */
 fun trainingPipeline() {
-    // Read config yaml file
     val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
+
+    if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost")) {
+        ensembleTrainingPipeline(cfg = cfg)
+    } else if (cfg.train.algorithm == "logisticRegression") {
+        logisticRegressionTrainingPipeline(cfg = cfg)
+    }
+}
+
+
+/**
+ * Comprises all preprocessing steps and the training/prediction for an ensemble classifier.
+ */
+fun ensembleTrainingPipeline(cfg: Config) {
 
     val blobClient = getBlobClientConnection(
         storageConnectionString = STORAGE_CONNECTION_STRING,
@@ -83,10 +96,6 @@ fun trainingPipeline() {
             predictions = model.predict(testDF = preProcessedTestData)
             println("AdaBoost")
         }
-        "logisticRegression" -> {
-            logisticRegressionTrainingPipeline()
-            return
-        }
     }
 
     val acc = calculateAccuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
@@ -97,9 +106,7 @@ fun trainingPipeline() {
 /**
  * Comprises all preprocessing steps and the training/prediction for Logistic Regression.
  */
-fun logisticRegressionTrainingPipeline() {
-    // Read config yaml file
-    val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
+fun logisticRegressionTrainingPipeline(cfg: Config) {
 
     val blobClient = getBlobClientConnection(
         storageConnectionString = STORAGE_CONNECTION_STRING,
@@ -136,13 +143,11 @@ fun logisticRegressionTrainingPipeline() {
     val yTrainIntArray = yTrain.toIntArray()
     val yTestIntArray = yTest.toIntArray()
 
-    var predictions = intArrayOf()
-
     // Train the model
     val logisticRegression = LogisticRegressionModel(cfg = cfg)
     logisticRegression.fit(xTrain = xTrainDoubleArray, yTrain = yTrainIntArray)
     // Calculate y-predictions based on the x-test set
-    predictions = logisticRegression.predict(xTest = xTestDoubleArray)
+    val predictions = logisticRegression.predict(xTest = xTestDoubleArray)
     println("Logistic Regression")
 
     // Calculate accuracy of y-predictions compared to y-test set
