@@ -30,7 +30,7 @@ fun getBlobClientConnection(storageConnectionString: String, blobContainerName: 
  * @param filePath Path to the file to which the blob should be downloaded
  */
 fun downloadFileFromBlob(blobClient: BlobClient, filePath: String) {
-    blobClient.downloadToFile(filePath)
+    blobClient.downloadToFile(filePath, true)
 }
 
 /**

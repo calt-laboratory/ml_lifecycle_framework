@@ -3,10 +3,6 @@ package training
 import azure.downloadFileFromBlob
 import azure.getBlobClientConnection
 import config.readYamlConfig
-import dataProcessing.dataPreProcessing
-import dataProcessing.trainTestSplit
-import dataProcessing.trainTestSplitForSmile
-import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import constants.PATH_TO_DATASET
 import constants.PATH_TO_PREPROCESSED_DATASET
 import constants.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
@@ -18,6 +14,10 @@ import constants.PATH_TO_YAML_CONFIG
 import constants.RAW_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_FILE_NAME
 import constants.STORAGE_CONNECTION_STRING
+import dataProcessing.dataPreProcessing
+import dataProcessing.trainTestSplit
+import dataProcessing.trainTestSplitForSmile
+import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import util.readCSVWithSmile
 import util.readDataFrameAsCSV
 import util.storeDataFrameAsCSV
@@ -113,24 +113,28 @@ fun trainingPipelineForEnsembleClassifiers() {
     var predictions = intArrayOf()
 
     // TODO: Implement logger to replace print statements
-    // TODO: Replace if w/ when
 
-    if (cfg.train.algorithm == "decisionTree") {
-        val model = DecisionTreeClassifier(cfg = cfg)
-        model.fit(trainDF = preProcessedTrainData)
-        predictions = model.predict(testDF = preProcessedTestData)
-        println("Decision Tree")
-    } else if (cfg.train.algorithm  == "randomForest") {
-        val model = RandomForestClassifier(cfg = cfg)
-        model.fit(trainDF = preProcessedTrainData)
-        predictions = model.predict(testDF = preProcessedTestData)
-        println("Random Forest")
-    } else if (cfg.train.algorithm  == "adaBoost") {
-        val model = AdaBoostClassifier(cfg = cfg)
-        model.fit(trainDF = preProcessedTrainData)
-        predictions = model.predict(testDF = preProcessedTestData)
-        println("AdaBoost")
+    when(cfg.train.algorithm) {
+        "decisionTree" -> {
+            val model = DecisionTreeClassifier(cfg = cfg)
+            model.fit(trainDF = preProcessedTrainData)
+            predictions = model.predict(testDF = preProcessedTestData)
+            println("Decision Tree")
+        }
+        "randomForest" -> {
+            val model = RandomForestClassifier(cfg = cfg)
+            model.fit(trainDF = preProcessedTrainData)
+            predictions = model.predict(testDF = preProcessedTestData)
+            println("Random Forest")
+        }
+        "adaBoost" -> {
+            val model = AdaBoostClassifier(cfg = cfg)
+            model.fit(trainDF = preProcessedTrainData)
+            predictions = model.predict(testDF = preProcessedTestData)
+            println("AdaBoost")
+        }
     }
+
     val acc = calculateAccuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
     println("Accuracy: $acc")
 }
