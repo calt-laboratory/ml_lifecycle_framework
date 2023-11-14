@@ -1,6 +1,6 @@
 train:
-  algorithm: "decisionTree"
-  # "decisionTree", "randomForest", "adaBoost"
+  algorithm: "logisticRegression"
+  # "decisionTree", "randomForest", "adaBoost", "logisticRegression"
 
   decisionTree:
     maxDepth: 20
@@ -22,6 +22,11 @@ train:
     maxDepth: 20
     maxNodes: 6
     nodeSize: 1
+
+  logisticRegression:
+    lambda: 0.0
+    tol: 1E-5
+    maxIter: 500
 
 preProcessing:
   seed: 42

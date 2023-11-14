@@ -66,12 +66,18 @@ fun trainingPipeline() {
     val yTrainIntArray = yTrain.toIntArray()
     val yTestIntArray = yTest.toIntArray()
 
-    // Train the model
-    val logisticRegression = LogisticRegressionModel()
-    logisticRegression.fit(xTrain = xTrainDoubleArray, yTrain = yTrainIntArray)
+    var predictions = intArrayOf()
 
-    // Calculate y-predictions based on the x-test set
-    val predictions = logisticRegression.predictModel(xTest = xTestDoubleArray)
+    // Train the model
+    when(cfg.train.algorithm) {
+        "logisticRegression" -> {
+            val logisticRegression = LogisticRegressionModel(cfg = cfg)
+            logisticRegression.fit(xTrain = xTrainDoubleArray, yTrain = yTrainIntArray)
+            // Calculate y-predictions based on the x-test set
+            predictions = logisticRegression.predict(xTest = xTestDoubleArray)
+            println("Logistic Regression")
+        }
+    }
 
     // Calculate accuracy of y-predictions compared to y-test set
     val accuracy = calculateAccuracy(yTrue = yTestIntArray, yPred = predictions)

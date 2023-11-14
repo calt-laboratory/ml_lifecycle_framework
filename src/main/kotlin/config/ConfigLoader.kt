@@ -10,7 +10,8 @@ data class TrainConfig(
     val algorithm: String,
     val decisionTree: DecisionTreeConfig,
     val randomForest: RandomForestConfig,
-    val adaBoost: AdaBoostConfig?,
+    val adaBoost: AdaBoostConfig,
+    val logisticRegression: LogisticRegressionConfig,
 )
 
 @Serializable
@@ -38,6 +39,13 @@ data class AdaBoostConfig(
     val maxDepth: Int,
     val maxNodes: Int,
     val nodeSize: Int,
+)
+
+@Serializable
+data class LogisticRegressionConfig(
+    val lambda: Double,
+    val tol: Double,
+    val maxIter: Int,
 )
 
 @Serializable
