@@ -32,7 +32,7 @@ import util.toIntArray
 fun trainingPipeline() {
     val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
 
-    if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost")) {
+    if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
         ensembleTrainingPipeline(cfg = cfg)
     } else if (cfg.train.algorithm == "logisticRegression") {
         logisticRegressionTrainingPipeline(cfg = cfg)
@@ -95,6 +95,12 @@ fun ensembleTrainingPipeline(cfg: Config) {
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
             println("AdaBoost")
+        }
+        "gradientBoosting" -> {
+            val model = GradientBoostingClassifier(cfg = cfg)
+            model.fit(trainDF = preProcessedTrainData)
+            predictions = model.predict(testDF = preProcessedTestData)
+            println("Gradient Boosting")
         }
     }
 

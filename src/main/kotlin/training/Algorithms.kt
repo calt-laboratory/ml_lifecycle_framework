@@ -4,6 +4,7 @@ import config.Config
 import smile.base.cart.SplitRule
 import smile.classification.AdaBoost
 import smile.classification.DecisionTree
+import smile.classification.GradientTreeBoost
 import smile.classification.LogisticRegression
 import smile.classification.RandomForest
 import smile.classification.adaboost
@@ -21,7 +22,6 @@ abstract class EnsembleClassifier(val cfg: Config) {
 }
 
 
-// TODO: Implement GBM
 // TODO: Implement Deep Learning Net using KotlinDL
 // TODO: Add SplitRule as yaml config param in DecisionTreeClassifier and RandomForestClassifier
 class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
@@ -85,6 +85,31 @@ class AdaBoostClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             maxDepth = 20,
             maxNodes = 6,
             nodeSize = 1,
+            )
+    }
+
+    override fun predict(testDF: smile.data.DataFrame) : IntArray {
+        val model = requireNotNull(model) { "Model is not fitted yet." }
+        val predictions = model.predict(testDF)
+        return predictions
+    }
+}
+
+
+class GradientBoostingClassifier(cfg: Config) : EnsembleClassifier(cfg) {
+
+    private var model: GradientTreeBoost? = null
+
+    override fun fit(trainDF: smile.data.DataFrame) {
+        model = smile.classification.gbm(
+            formula = Formula.lhs("diagnosis"),
+            data = trainDF,
+            ntrees = cfg.train.gradientBoosting.nTrees,
+            maxDepth = cfg.train.gradientBoosting.maxDepth,
+            maxNodes = cfg.train.gradientBoosting.maxNodes,
+            nodeSize = cfg.train.gradientBoosting.nodeSize,
+            shrinkage = cfg.train.gradientBoosting.shrinkage,
+            subsample = cfg.train.gradientBoosting.subsample,
             )
     }
 
