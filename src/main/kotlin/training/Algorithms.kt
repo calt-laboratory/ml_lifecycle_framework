@@ -81,10 +81,10 @@ class AdaBoostClassifier(cfg: Config) : EnsembleClassifier(cfg) {
         model = adaboost(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            ntrees = 500,
-            maxDepth = 20,
-            maxNodes = 6,
-            nodeSize = 1,
+            ntrees = cfg.train.adaBoost.nTrees,
+            maxDepth = cfg.train.adaBoost.maxDepth,
+            maxNodes = cfg.train.adaBoost.maxNodes,
+            nodeSize = cfg.train.adaBoost.nodeSize,
             )
     }
 
