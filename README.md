@@ -9,6 +9,7 @@ I used the **Smile** Java library to implement some classification algorithms
 - Decision Tree
 - Random Forest
 - Ada Boost
+- Gradient Boost
 
 Further used libraries:
 - Kotlin DataFrame
