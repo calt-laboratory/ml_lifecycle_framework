@@ -23,6 +23,9 @@ import constants.RAW_FILE_NAME
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForSmile
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import util.readCSVAsKotlinDF
 import util.readCSVAsSmileDF
@@ -48,7 +51,7 @@ fun trainingPipeline() {
 /**
  * Comprises all preprocessing steps and the training/prediction for an ensemble classifier.
  */
-fun ensembleTrainingPipeline(cfg: Config) {
+fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
 
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
@@ -68,42 +71,32 @@ fun ensembleTrainingPipeline(cfg: Config) {
         randomState = cfg.preProcessing.seed,
     )
 
-    val blobClientPreProcessedData = getBlobClientConnection(
-        storageConnectionString = storageConnectionString,
-        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
-        fileName = PREPROCESSED_FILE_NAME,
-    )
-    storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
-    uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = PATH_TO_PREPROCESSED_DATASET)
-
     // Store dataframes locally
+    storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
     storeKotlinDFAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     storeKotlinDFAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
     storeKotlinDFAsCSV(df = yTestData.toDataFrame(), path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
-    // Upload dataframes to Blob
-    val blobClientPreProcessedTrainData = getBlobClientConnection(
-        storageConnectionString = storageConnectionString,
-        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
-        fileName = PREPROCESSED_TRAIN_DATASET_FILE_NAME,
+    val filesToUpload = listOf(
+        Pair(PREPROCESSED_FILE_NAME, PATH_TO_PREPROCESSED_DATASET),
+        Pair(PREPROCESSED_TRAIN_DATASET_FILE_NAME, PATH_TO_PREPROCESSED_TRAIN_DATASET),
+        Pair(PREPROCESSED_TEST_DATASET_FILE_NAME, PATH_TO_PREPROCESSED_TEST_DATASET),
+        Pair(PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME, PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA),
     )
-    uploadFileToBlob(blobClient = blobClientPreProcessedTrainData, filePath = PATH_TO_PREPROCESSED_TRAIN_DATASET)
 
-    val blobClientPreProcessedTestData = getBlobClientConnection(
-        storageConnectionString = storageConnectionString,
-        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
-        fileName = PREPROCESSED_TEST_DATASET_FILE_NAME,
-    )
-    uploadFileToBlob(blobClient = blobClientPreProcessedTestData, filePath = PATH_TO_PREPROCESSED_TEST_DATASET)
+    val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
+        async {
+            val blobClientPreProcessedData = getBlobClientConnection(
+                storageConnectionString = storageConnectionString,
+                blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+                fileName = fileName
+            )
+            uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = localFilePath)
+        }
+    }
+    deferredUploads.awaitAll()
 
-    val blobClientPreProcessedYTestData = getBlobClientConnection(
-        storageConnectionString = storageConnectionString,
-        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
-        fileName = PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME,
-    )
-    uploadFileToBlob(blobClient = blobClientPreProcessedYTestData, filePath = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
-    Thread.sleep(3000)
     val preProcessedTrainData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     val preProcessedTestData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TEST_DATASET)
     val preProcessedYTestData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
