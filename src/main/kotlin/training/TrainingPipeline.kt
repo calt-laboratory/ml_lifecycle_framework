@@ -14,7 +14,6 @@ import constants.PATH_TO_PREPROCESSED_Y_DATA
 import constants.PATH_TO_YAML_CONFIG
 import constants.RAW_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_FILE_NAME
-import constants.STORAGE_CONNECTION_STRING
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForSmile
@@ -45,8 +44,10 @@ fun trainingPipeline() {
  */
 fun ensembleTrainingPipeline(cfg: Config) {
 
+    val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
+
     val blobClient = getBlobClientConnection(
-        storageConnectionString = STORAGE_CONNECTION_STRING,
+        storageConnectionString = storageConnectionString,
         blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
         fileName = RAW_FILE_NAME,
     )
@@ -114,8 +115,10 @@ fun ensembleTrainingPipeline(cfg: Config) {
  */
 fun logisticRegressionTrainingPipeline(cfg: Config) {
 
+    val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
+
     val blobClient = getBlobClientConnection(
-        storageConnectionString = STORAGE_CONNECTION_STRING,
+        storageConnectionString = storageConnectionString,
         blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
         fileName = RAW_FILE_NAME,
     )
