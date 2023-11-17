@@ -36,7 +36,7 @@ fun downloadFileFromBlob(blobClient: BlobClient, filePath: String) {
 /**
  * Uploads a file to Blob level.
  * @param blobClient BlobClient object to access a blob in a container
- * @param filePath Path to the file to which the blob should be uploaded
+ * @param filePath Path of the file to upload
  */
 fun uploadFileToBlob(blobClient: BlobClient, filePath: String) {
     blobClient.uploadFromFile(filePath, true)

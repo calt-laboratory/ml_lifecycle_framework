@@ -11,11 +11,11 @@ import org.jetbrains.kotlinx.dataframe.io.writeCSV
  * @param path Path to the CSV file
  * @return Unprocessed data frame
  */
-fun readDataFrameAsCSV(path: String): DataFrame<*> {
+fun readCSVAsKotlinDF(path: String): DataFrame<*> {
     return DataFrame.readCSV(path)
 }
 
-fun storeDataFrameAsCSV(df: DataFrame<*>, path: String) {
+fun storeKotlinDFAsCSV(df: DataFrame<*>, path: String) {
     df.writeCSV(path = path)
 }
 
@@ -24,6 +24,6 @@ fun storeTargetAsCSV(target: DataColumn<*>, path: String) {
     df.writeCSV(path = path)
 }
 
-fun readCSVWithSmile(path: String): smile.data.DataFrame  {
+fun readCSVAsSmileDF(path: String): smile.data.DataFrame  {
     return smile.read.csv(path)
 }

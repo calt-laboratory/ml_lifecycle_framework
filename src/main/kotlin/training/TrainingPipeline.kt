@@ -2,6 +2,7 @@ package training
 
 import azure.downloadFileFromBlob
 import azure.getBlobClientConnection
+import azure.uploadFileToBlob
 import config.Config
 import config.readYamlConfig
 import constants.PATH_TO_DATASET
@@ -12,15 +13,20 @@ import constants.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import constants.PATH_TO_PREPROCESSED_X_DATA
 import constants.PATH_TO_PREPROCESSED_Y_DATA
 import constants.PATH_TO_YAML_CONFIG
+import constants.PREPROCESSED_FILE_NAME
+import constants.PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME
+import constants.PREPROCESSED_TEST_DATASET_FILE_NAME
+import constants.PREPROCESSED_TRAIN_DATASET_FILE_NAME
+import constants.PROCESSED_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_FILE_NAME
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForSmile
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import util.readCSVWithSmile
-import util.readDataFrameAsCSV
-import util.storeDataFrameAsCSV
+import util.readCSVAsKotlinDF
+import util.readCSVAsSmileDF
+import util.storeKotlinDFAsCSV
 import util.toDoubleArray
 import util.toIntArray
 
@@ -53,7 +59,7 @@ fun ensembleTrainingPipeline(cfg: Config) {
     )
     downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
 
-    val data = readDataFrameAsCSV(path = PATH_TO_DATASET)
+    val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (preProcessedDF, _, _) = dataPreProcessing(df = data)
 
     val (trainData, testData, _, yTestData) = trainTestSplitForSmile(
@@ -62,17 +68,45 @@ fun ensembleTrainingPipeline(cfg: Config) {
         randomState = cfg.preProcessing.seed,
     )
 
-    // TODO: Implement connection to Blob to store preprocessed data there
+    val blobClientPreProcessedData = getBlobClientConnection(
+        storageConnectionString = storageConnectionString,
+        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+        fileName = PREPROCESSED_FILE_NAME,
+    )
+    storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
+    uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = PATH_TO_PREPROCESSED_DATASET)
 
-    storeDataFrameAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
-    storeDataFrameAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
-    storeDataFrameAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
-    storeDataFrameAsCSV(df = yTestData.toDataFrame(), path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
+    // Store dataframes locally
+    storeKotlinDFAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
+    storeKotlinDFAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
+    storeKotlinDFAsCSV(df = yTestData.toDataFrame(), path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
+
+    // Upload dataframes to Blob
+    val blobClientPreProcessedTrainData = getBlobClientConnection(
+        storageConnectionString = storageConnectionString,
+        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+        fileName = PREPROCESSED_TRAIN_DATASET_FILE_NAME,
+    )
+    uploadFileToBlob(blobClient = blobClientPreProcessedTrainData, filePath = PATH_TO_PREPROCESSED_TRAIN_DATASET)
+
+    val blobClientPreProcessedTestData = getBlobClientConnection(
+        storageConnectionString = storageConnectionString,
+        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+        fileName = PREPROCESSED_TEST_DATASET_FILE_NAME,
+    )
+    uploadFileToBlob(blobClient = blobClientPreProcessedTestData, filePath = PATH_TO_PREPROCESSED_TEST_DATASET)
+
+    val blobClientPreProcessedYTestData = getBlobClientConnection(
+        storageConnectionString = storageConnectionString,
+        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+        fileName = PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME,
+    )
+    uploadFileToBlob(blobClient = blobClientPreProcessedYTestData, filePath = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
+
     Thread.sleep(3000)
-
-    val preProcessedTrainData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
-    val preProcessedTestData = readCSVWithSmile(path = PATH_TO_PREPROCESSED_TEST_DATASET)
-    val preProcessedYTestData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
+    val preProcessedTrainData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
+    val preProcessedTestData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TEST_DATASET)
+    val preProcessedYTestData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
 
     var predictions = intArrayOf()
 
@@ -124,18 +158,18 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
     )
     downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
 
-    val data = readDataFrameAsCSV(path = PATH_TO_DATASET)
+    val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
 
     // TODO: Implement connection to Blob to store preprocessed data there
 
-    storeDataFrameAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
-    storeDataFrameAsCSV(df = xData, path = PATH_TO_PREPROCESSED_X_DATA)
-    storeDataFrameAsCSV(df = yData.toDataFrame(), path = PATH_TO_PREPROCESSED_Y_DATA)
+    storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
+    storeKotlinDFAsCSV(df = xData, path = PATH_TO_PREPROCESSED_X_DATA)
+    storeKotlinDFAsCSV(df = yData.toDataFrame(), path = PATH_TO_PREPROCESSED_Y_DATA)
     Thread.sleep(3000)
 
-    val prePreProcessedXData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_X_DATA)
-    val prePreProcessedYData = readDataFrameAsCSV(path = PATH_TO_PREPROCESSED_Y_DATA)
+    val prePreProcessedXData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA)
+    val prePreProcessedYData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA)
 
     val (xTrain, xTest, yTrain, yTest) = trainTestSplit(
         xData = prePreProcessedXData,
