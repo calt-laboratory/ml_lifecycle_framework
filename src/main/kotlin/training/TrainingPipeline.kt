@@ -30,6 +30,7 @@ import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import util.readCSVAsKotlinDF
 import util.readCSVAsSmileDF
 import util.storeKotlinDFAsCSV
+import util.storeKotlinDFAsCSVAsync
 import util.toDoubleArray
 import util.toIntArray
 
@@ -71,12 +72,19 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
         randomState = cfg.preProcessing.seed,
     )
 
-    // Store dataframes locally
-    storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
-    storeKotlinDFAsCSV(df = trainData, path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
-    storeKotlinDFAsCSV(df = testData, path = PATH_TO_PREPROCESSED_TEST_DATASET)
-    storeKotlinDFAsCSV(df = yTestData.toDataFrame(), path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
+    // Store Kotlin DataFrame locally
+    val dataframesAndPaths = listOf(
+        preProcessedDF to PATH_TO_PREPROCESSED_DATASET,
+        trainData to PATH_TO_PREPROCESSED_TRAIN_DATASET,
+        testData to PATH_TO_PREPROCESSED_TEST_DATASET,
+        yTestData.toDataFrame() to PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
+    )
+    val preProcessedKotlinDFToStore = dataframesAndPaths.map { (df, path) ->
+        async { storeKotlinDFAsCSVAsync(df, path) }
+    }
+    preProcessedKotlinDFToStore.awaitAll()
 
+    // Upload preprocessed data to Blob
     val filesToUpload = listOf(
         Pair(PREPROCESSED_FILE_NAME, PATH_TO_PREPROCESSED_DATASET),
         Pair(PREPROCESSED_TRAIN_DATASET_FILE_NAME, PATH_TO_PREPROCESSED_TRAIN_DATASET),
@@ -95,7 +103,6 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
         }
     }
     deferredUploads.awaitAll()
-
 
     val preProcessedTrainData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
     val preProcessedTestData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TEST_DATASET)

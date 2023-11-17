@@ -1,5 +1,7 @@
 package util
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jetbrains.kotlinx.dataframe.DataColumn
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
@@ -17,6 +19,10 @@ fun readCSVAsKotlinDF(path: String): DataFrame<*> {
 
 fun storeKotlinDFAsCSV(df: DataFrame<*>, path: String) {
     df.writeCSV(path = path)
+}
+
+suspend fun storeKotlinDFAsCSVAsync(df: DataFrame<*>, path: String) = withContext(Dispatchers.IO) {
+    storeKotlinDFAsCSV(df = df, path = path)
 }
 
 fun storeTargetAsCSV(target: DataColumn<*>, path: String) {
