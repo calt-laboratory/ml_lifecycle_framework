@@ -28,7 +28,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import util.readCSVAsKotlinDF
-import util.readCSVAsSmileDF
+import util.readCSVAsKotlinDFAsync
+import util.readCSVAsSmileDFAsync
 import util.storeKotlinDFAsCSV
 import util.storeKotlinDFAsCSVAsync
 import util.toDoubleArray
@@ -104,9 +105,10 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
     }
     deferredUploads.awaitAll()
 
-    val preProcessedTrainData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TRAIN_DATASET)
-    val preProcessedTestData = readCSVAsSmileDF(path = PATH_TO_PREPROCESSED_TEST_DATASET)
-    val preProcessedYTestData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA)
+    // Read in preprocessed data
+    val preProcessedTrainData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TRAIN_DATASET) }.await()
+    val preProcessedTestData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TEST_DATASET) }.await()
+    val preProcessedYTestData = async { readCSVAsKotlinDFAsync(PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA) }.await()
 
     var predictions = intArrayOf()
 
@@ -162,6 +164,7 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
 
     // TODO: Implement connection to Blob to store preprocessed data there
+    // TODO: Integrate coroutines like in ensembleTrainingPipeline()
 
     storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
     storeKotlinDFAsCSV(df = xData, path = PATH_TO_PREPROCESSED_X_DATA)

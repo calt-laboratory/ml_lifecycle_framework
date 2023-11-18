@@ -25,6 +25,12 @@ suspend fun storeKotlinDFAsCSVAsync(df: DataFrame<*>, path: String) = withContex
     storeKotlinDFAsCSV(df = df, path = path)
 }
 
+suspend fun readCSVAsKotlinDFAsync(path: String): DataFrame<*> {
+    return withContext(Dispatchers.IO) {
+        readCSVAsKotlinDF(path = path)
+    }
+}
+
 fun storeTargetAsCSV(target: DataColumn<*>, path: String) {
     val df = target.toDataFrame()
     df.writeCSV(path = path)
@@ -32,4 +38,10 @@ fun storeTargetAsCSV(target: DataColumn<*>, path: String) {
 
 fun readCSVAsSmileDF(path: String): smile.data.DataFrame  {
     return smile.read.csv(path)
+}
+
+suspend fun readCSVAsSmileDFAsync(path: String): smile.data.DataFrame {
+    return withContext(Dispatchers.IO) {
+        readCSVAsSmileDF(path)
+    }
 }
