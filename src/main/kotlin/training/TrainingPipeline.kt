@@ -215,6 +215,10 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
 }
 
 
+
+/**
+ * Comprises all preprocessing steps and the training/prediction for a Deep Learning Classifier.
+ */
 fun deepLearningTrainingPipeline(cfg: Config) {
 
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
@@ -229,7 +233,7 @@ fun deepLearningTrainingPipeline(cfg: Config) {
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (_, xData, yData) = dataPreProcessing(df = data)
 
-    val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData)
+    val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData, testSize = cfg.preProcessing.testSize)
 
     val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
     val predictions = deepLearningClassifier.fitAndPredict(xData = train, yData = test)
