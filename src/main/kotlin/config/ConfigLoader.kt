@@ -13,6 +13,7 @@ data class TrainConfig(
     val adaBoost: AdaBoostConfig,
     val gradientBoosting: GradientBoostingConfig,
     val logisticRegression: LogisticRegressionConfig,
+    val deepLearningClassifier: DeepLearningClassifierConfig,
 )
 
 @Serializable
@@ -57,6 +58,14 @@ data class LogisticRegressionConfig(
     val lambda: Double,
     val tol: Double,
     val maxIter: Int,
+)
+
+@Serializable
+data class DeepLearningClassifierConfig(
+    val kernelInitializerSeed: Long,
+    val epochs: Int,
+    val trainBatchSize: Int,
+    val testBatchSize: Int,
 )
 
 @Serializable

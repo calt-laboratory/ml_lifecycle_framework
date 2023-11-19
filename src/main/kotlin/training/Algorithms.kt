@@ -132,7 +132,7 @@ class GradientBoostingClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 }
 
 
-class LogisticRegressionModel(val cfg: Config) {
+class LogisticRegressionModel(private val cfg: Config) {
 
     private var model: LogisticRegression? = null
 
@@ -154,25 +154,33 @@ class LogisticRegressionModel(val cfg: Config) {
 }
 
 
-class DeepLearningClassifier() {
-
-    val SEED = 12L
-    val TEST_BATCH_SIZE = 5
-    val EPOCHS = 20
-    val TRAINING_BATCH_SIZE = 5
+class DeepLearningClassifier(private val cfg: Config) {
 
     private var model = Sequential.of(
         Input(30),
-        Dense(outputSize = 300, activation = Activations.Relu, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
-        Dense(outputSize = 2, activation =  Activations.Linear, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
+        Dense(
+            outputSize = 300,
+            activation = Activations.Relu,
+            kernelInitializer = HeNormal(cfg.train.deepLearningClassifier.kernelInitializerSeed),
+            biasInitializer = Zeros(),
+            ),
+        Dense(outputSize = 2,
+            activation =  Activations.Linear,
+            kernelInitializer = HeNormal(cfg.train.deepLearningClassifier.kernelInitializerSeed),
+            biasInitializer = Zeros(),
+            ),
     )
 
     fun fitAndPredict(xData: OnHeapDataset, yData: OnHeapDataset) : EvaluationResult {
         model.use {
             it.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
             it.logSummary()
-            it.fit(dataset = xData, epochs = EPOCHS, batchSize = TRAINING_BATCH_SIZE)
-            return model.evaluate(dataset = yData, batchSize = TEST_BATCH_SIZE)
+            it.fit(
+                dataset = xData,
+                epochs = cfg.train.deepLearningClassifier.epochs,
+                batchSize = cfg.train.deepLearningClassifier.trainBatchSize,
+                )
+            return model.evaluate(dataset = yData, batchSize = cfg.train.deepLearningClassifier.testBatchSize)
         }
     }
 }

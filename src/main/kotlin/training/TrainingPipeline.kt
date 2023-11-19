@@ -51,6 +51,10 @@ fun trainingPipeline() {
         ensembleTrainingPipeline(cfg = cfg)
     } else if (cfg.train.algorithm == "logisticRegression") {
         logisticRegressionTrainingPipeline(cfg = cfg)
+    } else if (cfg.train.algorithm == "deepLearningClassifier") {
+        deepLearningTrainingPipeline(cfg = cfg)
+    } else {
+        println("No valid algorithm specified in config file.")
     }
 }
 
@@ -211,11 +215,7 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
 }
 
 
-fun deepLearningTrainingPipeline() {
-
-    val TEST_BATCH_SIZE = 5
-    val EPOCHS = 20
-    val TRAINING_BATCH_SIZE = 5
+fun deepLearningTrainingPipeline(cfg: Config) {
 
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
@@ -227,11 +227,11 @@ fun deepLearningTrainingPipeline() {
     downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
 
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
-    val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
+    val (_, xData, yData) = dataPreProcessing(df = data)
 
     val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData)
 
-    val deepLearningClassifier = DeepLearningClassifier()
+    val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
     val predictions = deepLearningClassifier.fitAndPredict(xData = train, yData = test)
     val accuracy = predictions.metrics[Metrics.ACCURACY]
     println("Accuracy: $accuracy")

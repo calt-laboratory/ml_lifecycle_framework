@@ -1,6 +1,6 @@
 train:
-  algorithm: "gradientBoosting"
-  # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression"
+  algorithm: "deepLearningClassifier"
+  # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
 
   decisionTree:
     maxDepth: 20
@@ -35,6 +35,12 @@ train:
     lambda: 0.0
     tol: 1E-5
     maxIter: 500
+
+  deepLearningClassifier:
+    kernelInitializerSeed: 12
+    epochs: 20
+    trainBatchSize: 32
+    testBatchSize: 32
 
 preProcessing:
   seed: 42
