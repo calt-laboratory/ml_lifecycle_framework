@@ -28,16 +28,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import org.jetbrains.kotlinx.dl.api.core.Sequential
-import org.jetbrains.kotlinx.dl.api.core.activation.Activations
-import org.jetbrains.kotlinx.dl.api.core.initializer.HeNormal
-import org.jetbrains.kotlinx.dl.api.core.initializer.Zeros
-import org.jetbrains.kotlinx.dl.api.core.layer.core.Dense
-import org.jetbrains.kotlinx.dl.api.core.layer.core.Input
-import org.jetbrains.kotlinx.dl.api.core.loss.Losses
 import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
-import org.jetbrains.kotlinx.dl.api.core.optimizer.SGD
-import org.jetbrains.kotlinx.dl.impl.summary.logSummary
 import org.slf4j.LoggerFactory
 import util.readCSVAsKotlinDF
 import util.readCSVAsKotlinDFAsync
@@ -222,7 +213,6 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
 
 fun deepLearningTrainingPipeline() {
 
-    val SEED = 12L
     val TEST_BATCH_SIZE = 5
     val EPOCHS = 20
     val TRAINING_BATCH_SIZE = 5
@@ -241,20 +231,8 @@ fun deepLearningTrainingPipeline() {
 
     val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData)
 
-    val model = Sequential.of(
-        Input(30),
-        Dense(outputSize = 300, activation = Activations.Relu, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
-        Dense(outputSize = 2, activation =  Activations.Linear, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
-    )
-
-    model.use {
-        it.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
-
-        it.logSummary()
-        it.fit(dataset = train, epochs = EPOCHS, batchSize = TRAINING_BATCH_SIZE)
-
-        val accuracy = model.evaluate(dataset = test, batchSize = TEST_BATCH_SIZE).metrics[Metrics.ACCURACY]
-
-        println("Accuracy: $accuracy")
-    }
+    val deepLearningClassifier = DeepLearningClassifier()
+    val predictions = deepLearningClassifier.fitAndPredict(xData = train, yData = test)
+    val accuracy = predictions.metrics[Metrics.ACCURACY]
+    println("Accuracy: $accuracy")
 }

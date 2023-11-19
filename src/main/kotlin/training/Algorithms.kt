@@ -1,6 +1,18 @@
 package training
 
 import config.Config
+import org.jetbrains.kotlinx.dl.api.core.Sequential
+import org.jetbrains.kotlinx.dl.api.core.activation.Activations
+import org.jetbrains.kotlinx.dl.api.core.initializer.HeNormal
+import org.jetbrains.kotlinx.dl.api.core.initializer.Zeros
+import org.jetbrains.kotlinx.dl.api.core.layer.core.Dense
+import org.jetbrains.kotlinx.dl.api.core.layer.core.Input
+import org.jetbrains.kotlinx.dl.api.core.loss.Losses
+import org.jetbrains.kotlinx.dl.api.core.metric.EvaluationResult
+import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
+import org.jetbrains.kotlinx.dl.api.core.optimizer.SGD
+import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
+import org.jetbrains.kotlinx.dl.impl.summary.logSummary
 import smile.base.cart.SplitRule
 import smile.classification.AdaBoost
 import smile.classification.DecisionTree
@@ -22,7 +34,6 @@ abstract class EnsembleClassifier(val cfg: Config) {
 }
 
 
-// TODO: Implement Deep Learning Net using KotlinDL
 // TODO: Add SplitRule as yaml config param in DecisionTreeClassifier and RandomForestClassifier
 class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 
@@ -139,5 +150,29 @@ class LogisticRegressionModel(val cfg: Config) {
         val model = requireNotNull(model) { "Model is not fitted yet." }
         val predictions = model.predict(xTest)
         return predictions
+    }
+}
+
+
+class DeepLearningClassifier() {
+
+    val SEED = 12L
+    val TEST_BATCH_SIZE = 5
+    val EPOCHS = 20
+    val TRAINING_BATCH_SIZE = 5
+
+    private var model = Sequential.of(
+        Input(30),
+        Dense(outputSize = 300, activation = Activations.Relu, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
+        Dense(outputSize = 2, activation =  Activations.Linear, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
+    )
+
+    fun fitAndPredict(xData: OnHeapDataset, yData: OnHeapDataset) : EvaluationResult {
+        model.use {
+            it.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
+            it.logSummary()
+            it.fit(dataset = xData, epochs = EPOCHS, batchSize = TRAINING_BATCH_SIZE)
+            return model.evaluate(dataset = yData, batchSize = TEST_BATCH_SIZE)
+        }
     }
 }
