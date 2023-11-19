@@ -27,14 +27,30 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import org.jetbrains.kotlinx.dl.api.core.Sequential
+import org.jetbrains.kotlinx.dl.api.core.activation.Activations
+import org.jetbrains.kotlinx.dl.api.core.initializer.HeNormal
+import org.jetbrains.kotlinx.dl.api.core.initializer.Zeros
+import org.jetbrains.kotlinx.dl.api.core.layer.core.Dense
+import org.jetbrains.kotlinx.dl.api.core.layer.core.Input
+import org.jetbrains.kotlinx.dl.api.core.loss.Losses
+import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
+import org.jetbrains.kotlinx.dl.api.core.optimizer.SGD
+import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
+import org.jetbrains.kotlinx.dl.impl.summary.logSummary
+import org.slf4j.LoggerFactory
 import util.readCSVAsKotlinDF
 import util.readCSVAsKotlinDFAsync
 import util.readCSVAsSmileDFAsync
 import util.storeKotlinDFAsCSV
 import util.storeKotlinDFAsCSVAsync
-import util.toDoubleArray
+import util.to2DDoubleArray
+import util.to2DFloatArray
+import util.toFloatArray
 import util.toIntArray
 
+
+private val logger = LoggerFactory.getLogger("TrainingPipeline")
 
 /**
  * Provides various training pipelines (e.g. for ensemble classifiers or logistic regression).
@@ -54,7 +70,7 @@ fun trainingPipeline() {
  * Comprises all preprocessing steps and the training/prediction for an ensemble classifier.
  */
 fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
-
+    logger.info("Starting ensemble training pipeline...")
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
     val blobClient = getBlobClientConnection(
@@ -119,21 +135,25 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
             val model = DecisionTreeClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
+            logger.info("Decision Tree training started.")
             println("Decision Tree")
         }
         "randomForest" -> {
             val model = RandomForestClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
+            logger.info("Random Forest training started.")
             println("Random Forest")
         }
         "adaBoost" -> {
+            logger.info("AdaBoost training started.")
             val model = AdaBoostClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
             println("AdaBoost")
         }
         "gradientBoosting" -> {
+            logger.info("Gradient Boosting training started.")
             val model = GradientBoostingClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
@@ -182,8 +202,8 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
     )
 
     // Convert training dataframes of type Kotlin DataFrame to make them compatible with Smile
-    val xTrainDoubleArray = xTrain.toDoubleArray()
-    val xTestDoubleArray = xTest.toDoubleArray()
+    val xTrainDoubleArray = xTrain.to2DDoubleArray()
+    val xTestDoubleArray = xTest.to2DDoubleArray()
 
     // Convert test columns of type Kotlin DataColumn to make them compatible with Smile
     val yTrainIntArray = yTrain.toIntArray()
@@ -199,4 +219,46 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
     // Calculate accuracy of y-predictions compared to y-test set
     val accuracy = calculateAccuracy(yTrue = yTestIntArray, yPred = predictions)
     println("Accuracy: $accuracy")
+}
+
+
+fun deepLearningTrainingPipeline() {
+
+    val SEED = 12L
+    val TEST_BATCH_SIZE = 5
+    val EPOCHS = 20
+    val TRAINING_BATCH_SIZE = 5
+
+    val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
+
+    val blobClient = getBlobClientConnection(
+        storageConnectionString = storageConnectionString,
+        blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
+        fileName = RAW_FILE_NAME,
+    )
+    downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+
+    val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
+    val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
+
+    val dataset = OnHeapDataset.create(features = xData.to2DFloatArray(), labels = yData.toFloatArray())
+
+    val (train, test) = dataset.split(0.9)
+
+    val model = Sequential.of(
+        Input(30),
+        Dense(outputSize = 300, activation = Activations.Relu, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
+        Dense(outputSize = 2, activation =  Activations.Linear, kernelInitializer = HeNormal(SEED), biasInitializer = Zeros()),
+    )
+
+    model.use {
+        it.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
+
+        it.logSummary()
+        it.fit(dataset = train, epochs = EPOCHS, batchSize = TRAINING_BATCH_SIZE)
+
+        val accuracy = model.evaluate(dataset = test, batchSize = TEST_BATCH_SIZE).metrics[Metrics.ACCURACY]
+
+        println("Accuracy: $accuracy")
+    }
 }
