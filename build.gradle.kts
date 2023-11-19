@@ -33,6 +33,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("com.charleskorn.kaml:kaml:0.55.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    // implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
+    implementation("ch.qos.logback:logback-classic:1.2.9")
+    implementation ("org.jetbrains.kotlinx:kotlin-deeplearning-tensorflow:[0.5.2]")
+    implementation ("org.jetbrains.kotlinx:kotlin-deeplearning-onnx:[0.5.2]")
+    implementation ("org.jetbrains.kotlinx:kotlin-deeplearning-visualization:[0.5.2]")
 
     testImplementation(kotlin("test"))
 }
