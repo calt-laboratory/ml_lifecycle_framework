@@ -75,9 +75,15 @@ data class PreProcessingConfig(
 )
 
 @Serializable
+data class PreProcessingDeepLearningConfig(
+    val trainSize: Double,
+)
+
+@Serializable
 data class Config(
     val train: TrainConfig,
     val preProcessing: PreProcessingConfig,
+    val preProcessingDL: PreProcessingDeepLearningConfig,
 )
 
 fun readYamlConfig(filePath: String): Config {

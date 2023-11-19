@@ -38,10 +38,13 @@ train:
 
   deepLearningClassifier:
     kernelInitializerSeed: 12
-    epochs: 20
+    epochs: 50
     trainBatchSize: 32
     testBatchSize: 32
 
 preProcessing:
   seed: 42
   testSize: 0.2
+
+preProcessingDL:
+  trainSize: 0.8

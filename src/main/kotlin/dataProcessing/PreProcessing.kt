@@ -87,10 +87,11 @@ fun trainTestSplitForSmile(data: DataFrame<*>, testSize: Double, randomState: In
  * Converts data into KotlinDL specific format and splits it into train and test sets.
  * @param xData Features
  * @param yData Target
+ * @param trainSize Size of the train set
  * @return Contains the train and test sets for features and target
  */
-fun trainTestSplitForKotlinDL(xData: DataFrame<*>, yData: DataColumn<*>, testSize: Double) : Pair<OnHeapDataset, OnHeapDataset> {
+fun trainTestSplitForKotlinDL(xData: DataFrame<*>, yData: DataColumn<*>, trainSize: Double) : Pair<OnHeapDataset, OnHeapDataset> {
     val dataset = OnHeapDataset.create(features = xData.to2DFloatArray(), labels = yData.toFloatArray())
-    val (train, test) = dataset.split(splitRatio = testSize)
+    val (train, test) = dataset.split(splitRatio = trainSize)
     return Pair(train, test)
 }

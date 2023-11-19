@@ -233,7 +233,7 @@ fun deepLearningTrainingPipeline(cfg: Config) {
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (_, xData, yData) = dataPreProcessing(df = data)
 
-    val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData, testSize = cfg.preProcessing.testSize)
+    val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData, trainSize = cfg.preProcessingDL.trainSize)
 
     val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
     val predictions = deepLearningClassifier.fitAndPredict(xData = train, yData = test)
