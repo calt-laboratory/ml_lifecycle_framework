@@ -29,20 +29,26 @@ fun <T> DataColumn<T>.toIntArray(): IntArray {
     return values().map { it.toString().toInt() }.toIntArray()
 }
 
+/**
+ * Extension function to convert Kotlin DataFrame type to a 2D array of float arrays.
+ */
 fun DataFrame<*>.to2DFloatArray(): Array<FloatArray> {
     return this.rows()
         .map { it.columnsToFloatArray() }
         .toTypedArray()
 }
 
+/**
+ * Extension function to convert Kotlin DataColumn to FloatArray.
+ */
 fun DataColumn<*>.toFloatArray(): FloatArray {
     val floatList = this.toList().map { it.toString().toFloat() }
     return floatList.toFloatArray()
 }
 
+/**
+ * Extension function to convert Kotlin DataRow to FloatArray.
+ */
 fun <T> DataRow<T>.columnsToFloatArray(): FloatArray {
     return this.values().map { it.toString().toFloat() }.toFloatArray()
 }
-
-
-
