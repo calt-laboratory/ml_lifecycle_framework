@@ -7,6 +7,9 @@ import org.jetbrains.kotlinx.dataframe.api.map
 import org.jetbrains.kotlinx.dataframe.api.remove
 import org.jetbrains.kotlinx.dataframe.api.replace
 import org.jetbrains.kotlinx.dataframe.api.with
+import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
+import util.to2DFloatArray
+import util.toFloatArray
 import kotlin.random.Random
 
 data class PreProcessedDataset(val df: DataFrame<Any?>, val xData: DataFrame<Any?>, val yData: DataColumn<*>)
@@ -78,4 +81,16 @@ fun trainTestSplitForSmile(data: DataFrame<*>, testSize: Double, randomState: In
     val yTestData = testData["diagnosis"]
 
     return SplitDataForSmile(trainData, testData, xTestData, yTestData)
+}
+
+/**
+ * Converts data into KotlinDL specific format and splits it into train and test sets.
+ * @param xData Features
+ * @param yData Target
+ * @return Contains the train and test sets for features and target
+ */
+fun trainTestSplitForKotlinDL(xData: DataFrame<*>, yData: DataColumn<*>) : Pair<OnHeapDataset, OnHeapDataset> {
+    val dataset = OnHeapDataset.create(features = xData.to2DFloatArray(), labels = yData.toFloatArray())
+    val (train, test) = dataset.split(splitRatio = 0.8)
+    return Pair(train, test)
 }

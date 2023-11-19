@@ -22,6 +22,7 @@ import constants.RAW_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_FILE_NAME
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
+import dataProcessing.trainTestSplitForKotlinDL
 import dataProcessing.trainTestSplitForSmile
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -36,7 +37,6 @@ import org.jetbrains.kotlinx.dl.api.core.layer.core.Input
 import org.jetbrains.kotlinx.dl.api.core.loss.Losses
 import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
 import org.jetbrains.kotlinx.dl.api.core.optimizer.SGD
-import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
 import org.jetbrains.kotlinx.dl.impl.summary.logSummary
 import org.slf4j.LoggerFactory
 import util.readCSVAsKotlinDF
@@ -45,8 +45,6 @@ import util.readCSVAsSmileDFAsync
 import util.storeKotlinDFAsCSV
 import util.storeKotlinDFAsCSVAsync
 import util.to2DDoubleArray
-import util.to2DFloatArray
-import util.toFloatArray
 import util.toIntArray
 
 
@@ -241,9 +239,7 @@ fun deepLearningTrainingPipeline() {
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
 
-    val dataset = OnHeapDataset.create(features = xData.to2DFloatArray(), labels = yData.toFloatArray())
-
-    val (train, test) = dataset.split(0.9)
+    val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData)
 
     val model = Sequential.of(
         Input(30),
