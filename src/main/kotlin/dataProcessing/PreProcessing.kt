@@ -43,7 +43,7 @@ data class SplitData(
  * @param yData Target
  * @param testSize Size of the test set
  * @param randomState Random state used to create the random indices
- * @return SplitData Contains the train and test sets for features and target
+ * @return SplitData Contains the train and test set
  */
 fun trainTestSplit(xData: DataFrame<Any?>, yData: DataColumn<*>, testSize: Double, randomState: Int): SplitData {
     val random = Random(seed = randomState)
@@ -67,6 +67,13 @@ fun trainTestSplit(xData: DataFrame<Any?>, yData: DataColumn<*>, testSize: Doubl
 
 data class SplitDataForSmile(val trainData: DataFrame<Any?>, val testData: DataFrame<Any?>, val xTestData: DataFrame<Any?>, val yTestData: DataColumn<*>)
 
+/**
+ * Splits a Kotlin dataframe into train set, test sets, x-test data and y-test to make it usable for Smile.
+ * @param data Kotlin Dataframe
+ * @param testSize Size of the test set
+ * @param randomState Random state used to create the random indices
+ * @return Contains the train set, test set, x-test and y-test data
+ */
 fun trainTestSplitForSmile(data: DataFrame<*>, testSize: Double, randomState: Int): SplitDataForSmile {
     val random = Random(seed = randomState)
     val indices = (0 until data.rowsCount()).shuffled(random)
@@ -88,7 +95,7 @@ fun trainTestSplitForSmile(data: DataFrame<*>, testSize: Double, randomState: In
  * @param xData Features
  * @param yData Target
  * @param trainSize Size of the train set
- * @return Contains the train and test sets for features and target
+ * @return Contains the train and test
  */
 fun trainTestSplitForKotlinDL(xData: DataFrame<*>, yData: DataColumn<*>, trainSize: Double) : Pair<OnHeapDataset, OnHeapDataset> {
     val dataset = OnHeapDataset.create(features = xData.to2DFloatArray(), labels = yData.toFloatArray())

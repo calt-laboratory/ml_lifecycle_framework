@@ -89,6 +89,11 @@ data class Config(
     val preProcessingDL: PreProcessingDeepLearningConfig,
 )
 
+/**
+ * Reads a YAML config file to provide all the config parameters.
+ * @param filePath Path to the YAML config file
+ * @return Config object
+ */
 fun readYamlConfig(filePath: String): Config {
     return Yaml.default.decodeFromString(
         Config.serializer(),
