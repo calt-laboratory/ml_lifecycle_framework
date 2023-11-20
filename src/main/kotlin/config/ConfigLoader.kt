@@ -2,6 +2,7 @@ package config
 
 import com.charleskorn.kaml.Yaml
 import kotlinx.serialization.Serializable
+import smile.base.cart.SplitRule
 import java.nio.file.Path
 import java.util.stream.LongStream
 
@@ -18,6 +19,7 @@ data class TrainConfig(
 
 @Serializable
 data class DecisionTreeConfig(
+    val splitRule: SplitRule,
     val maxDepth: Int,
     val maxNodes: Int,
     val nodeSize: Int,
@@ -27,6 +29,7 @@ data class DecisionTreeConfig(
 data class RandomForestConfig(
     val nTrees: Int,
     val mtry: Int,
+    val splitRule: SplitRule,
     val maxDepth: Int,
     val maxNodes: Int,
     val nodeSize: Int,

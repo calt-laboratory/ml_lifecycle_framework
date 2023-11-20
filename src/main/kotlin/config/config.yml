@@ -1,8 +1,9 @@
 train:
-  algorithm: "deepLearningClassifier"
+  algorithm: "randomForest"
   # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
 
   decisionTree:
+    splitRule: GINI
     maxDepth: 20
     maxNodes: 0
     nodeSize: 5
@@ -10,6 +11,7 @@ train:
   randomForest:
     nTrees: 500
     mtry: 0
+    splitRule: GINI
     maxDepth: 20
     maxNodes: 500
     nodeSize: 1

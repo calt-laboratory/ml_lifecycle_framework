@@ -11,8 +11,10 @@ I used the **Smile** Java library to implement some classification algorithms
 - Ada Boost
 - Gradient Boost
 
+... and **KotlinDL** for a Deep Learning Classifier.
+
 Further used libraries:
-- Kotlin DataFrame
+- **Kotlin DataFrame**
   - for data preprocessing
-- Azure SDK (Java)
+- **Azure SDK** (Java)
   - for data storage 

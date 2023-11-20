@@ -47,6 +47,8 @@ private val logger = LoggerFactory.getLogger("TrainingPipeline")
 fun trainingPipeline() {
     val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
 
+    // TODO: Replace if with when
+
     if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
         ensembleTrainingPipeline(cfg = cfg)
     } else if (cfg.train.algorithm == "logisticRegression") {
@@ -176,7 +178,7 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
 
-    // TODO: Implement connection to Blob to store preprocessed data there
+    // TODO: Implement connection to preprocessed Blob to store preprocessed data there
     // TODO: Integrate coroutines like in ensembleTrainingPipeline()
 
     storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
@@ -215,7 +217,6 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
 }
 
 
-
 /**
  * Comprises all preprocessing steps and the training/prediction for a Deep Learning Classifier.
  */
@@ -232,6 +233,9 @@ fun deepLearningTrainingPipeline(cfg: Config) {
 
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (_, xData, yData) = dataPreProcessing(df = data)
+
+    // TODO: Implement connection to preprocessed Blob to store preprocessed data there
+    // TODO: Integrate coroutines like in ensembleTrainingPipeline()
 
     val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData, trainSize = cfg.preProcessingDL.trainSize)
 

@@ -13,7 +13,6 @@ import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
 import org.jetbrains.kotlinx.dl.api.core.optimizer.SGD
 import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
 import org.jetbrains.kotlinx.dl.impl.summary.logSummary
-import smile.base.cart.SplitRule
 import smile.classification.AdaBoost
 import smile.classification.DecisionTree
 import smile.classification.GradientTreeBoost
@@ -34,7 +33,6 @@ abstract class EnsembleClassifier(val cfg: Config) {
 }
 
 
-// TODO: Add SplitRule as yaml config param in DecisionTreeClassifier and RandomForestClassifier
 class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 
     private lateinit var model: DecisionTree
@@ -43,7 +41,7 @@ class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
         model = cart(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            splitRule = SplitRule.GINI,
+            splitRule = cfg.train.decisionTree.splitRule,
             maxDepth = cfg.train.decisionTree.maxDepth,
             maxNodes = cfg.train.decisionTree.maxNodes,
             nodeSize = cfg.train.decisionTree.nodeSize,
@@ -67,7 +65,7 @@ class RandomForestClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             data = trainDF,
             ntrees = cfg.train.randomForest.nTrees,
             mtry = cfg.train.randomForest.mtry,
-            splitRule = SplitRule.GINI,
+            splitRule = cfg.train.randomForest.splitRule,
             maxDepth = cfg.train.randomForest.maxDepth,
             maxNodes = cfg.train.randomForest.maxNodes,
             nodeSize = cfg.train.randomForest.nodeSize,
