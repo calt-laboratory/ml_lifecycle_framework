@@ -37,6 +37,7 @@ import util.storeKotlinDFAsCSV
 import util.storeKotlinDFAsCSVAsync
 import util.to2DDoubleArray
 import util.toIntArray
+import kotlin.time.measureTime
 
 
 private val logger = LoggerFactory.getLogger("TrainingPipeline")
@@ -50,11 +51,14 @@ fun trainingPipeline() {
     // TODO: Replace if with when
 
     if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
-        ensembleTrainingPipeline(cfg = cfg)
+        val duration = measureTime { ensembleTrainingPipeline(cfg = cfg) }
+        println("Ensemble training pipeline duration: $duration")
     } else if (cfg.train.algorithm == "logisticRegression") {
-        logisticRegressionTrainingPipeline(cfg = cfg)
+        val duration = measureTime { logisticRegressionTrainingPipeline(cfg = cfg) }
+        println("Logistic Regression training pipeline duration: $duration")
     } else if (cfg.train.algorithm == "deepLearningClassifier") {
-        deepLearningTrainingPipeline(cfg = cfg)
+        val duration = measureTime { deepLearningTrainingPipeline(cfg = cfg) }
+        println("Deep Learning training pipeline duration: $duration")
     } else {
         println("No valid algorithm specified in config file.")
     }
