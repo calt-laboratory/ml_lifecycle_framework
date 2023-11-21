@@ -9,6 +9,8 @@ const val PREPROCESSED_FILE_NAME = "preprocessed_breast_cancer_classification.cs
 const val PREPROCESSED_TRAIN_DATASET_FILE_NAME = "train_data_preprocessed_breast_cancer_classification.csv"
 const val PREPROCESSED_TEST_DATASET_FILE_NAME = "test_data_preprocessed_breast_cancer_classification.csv"
 const val PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME = "y_smile_test_data_preprocessed_breast_cancer_classification.csv"
+const val PREPROCESSED_X_DATA_FILE_NAME = "x_data_preprocessed_breast_cancer_classification.csv"
+const val PREPROCESSED_Y_DATA_FILE_NAME = "y_data_preprocessed_breast_cancer_classification.csv"
 
 const val PATH_TO_PREPROCESSED_DATASET = "src/main/resources/preprocessed_datasets/preprocessed_breast_cancer_classification.csv"
 
@@ -21,3 +23,5 @@ const val PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA = "src/main/resources/preproces
 const val PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA = "src/main/resources/preprocessed_datasets/y_smile_test_data_preprocessed_breast_cancer_classification.csv"
 
 const val PATH_TO_YAML_CONFIG = "src/main/kotlin/config/config.yml"
+
+const val LOG_DIR = "src/main/logs"

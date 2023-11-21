@@ -17,6 +17,8 @@ import constants.PREPROCESSED_FILE_NAME
 import constants.PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME
 import constants.PREPROCESSED_TEST_DATASET_FILE_NAME
 import constants.PREPROCESSED_TRAIN_DATASET_FILE_NAME
+import constants.PREPROCESSED_X_DATA_FILE_NAME
+import constants.PREPROCESSED_Y_DATA_FILE_NAME
 import constants.PROCESSED_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_FILE_NAME
@@ -87,7 +89,7 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
         randomState = cfg.preProcessing.seed,
     )
 
-    // Store Kotlin DataFrame locally
+    // Store Kotlin DF's locally
     val dataframesAndPaths = listOf(
         preProcessedDF to PATH_TO_PREPROCESSED_DATASET,
         trainData to PATH_TO_PREPROCESSED_TRAIN_DATASET,
@@ -194,6 +196,37 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
         async { storeKotlinDFAsCSVAsync(df, path) }
     }
     preProcessedKotlinDFsToStore.awaitAll()
+
+    // Upload preprocessed data to Blob
+    val filesToUpload = listOf(
+        Pair(PREPROCESSED_FILE_NAME, PATH_TO_PREPROCESSED_DATASET),
+        Pair(PREPROCESSED_X_DATA_FILE_NAME, PATH_TO_PREPROCESSED_X_DATA),
+        Pair(PREPROCESSED_Y_DATA_FILE_NAME, PATH_TO_PREPROCESSED_Y_DATA),
+    )
+
+//    val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
+//        async {
+//            val blobClientPreProcessedData = getBlobClientConnection(
+//                storageConnectionString = storageConnectionString,
+//                blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+//                fileName = fileName
+//            )
+//            uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = localFilePath)
+//        }
+//    }
+//    deferredUploads.awaitAll()
+
+    val deferredUploads = filesToUpload.map {
+        async {
+            val blobClientPreProcessedData = getBlobClientConnection(
+                storageConnectionString = storageConnectionString,
+                blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+                fileName = it.first
+            )
+            uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = it.second)
+        }
+    }
+    deferredUploads.awaitAll()
 
     val prePreProcessedXData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA)
     val prePreProcessedYData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA)
