@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory
 import util.readCSVAsKotlinDF
 import util.readCSVAsKotlinDFAsync
 import util.readCSVAsSmileDFAsync
-import util.storeKotlinDFAsCSV
 import util.storeKotlinDFAsCSVAsync
 import util.to2DDoubleArray
 import util.toIntArray
@@ -168,7 +167,7 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
 /**
  * Comprises all preprocessing steps and the training/prediction for Logistic Regression.
  */
-fun logisticRegressionTrainingPipeline(cfg: Config) {
+fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
 
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
@@ -185,10 +184,16 @@ fun logisticRegressionTrainingPipeline(cfg: Config) {
     // TODO: Implement connection to preprocessed Blob to store preprocessed data there
     // TODO: Integrate coroutines like in ensembleTrainingPipeline()
 
-    storeKotlinDFAsCSV(df = preProcessedDF, path = PATH_TO_PREPROCESSED_DATASET)
-    storeKotlinDFAsCSV(df = xData, path = PATH_TO_PREPROCESSED_X_DATA)
-    storeKotlinDFAsCSV(df = yData.toDataFrame(), path = PATH_TO_PREPROCESSED_Y_DATA)
-    Thread.sleep(3000)
+    // Store Kotlin DF's locally
+    val kotlinDFsAndPaths = listOf(
+        preProcessedDF to PATH_TO_PREPROCESSED_DATASET,
+        xData to PATH_TO_PREPROCESSED_X_DATA,
+        yData.toDataFrame() to PATH_TO_PREPROCESSED_Y_DATA,
+    )
+    val preProcessedKotlinDFsToStore = kotlinDFsAndPaths.map { (df, path) ->
+        async { storeKotlinDFAsCSVAsync(df, path) }
+    }
+    preProcessedKotlinDFsToStore.awaitAll()
 
     val prePreProcessedXData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA)
     val prePreProcessedYData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA)
