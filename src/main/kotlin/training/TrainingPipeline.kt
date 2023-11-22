@@ -273,6 +273,23 @@ fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
     }
     preProcessedKotlinDFsToStore.awaitAll()
 
+    // Upload preprocessed data to Blob
+    val filesToUpload = listOf(
+        Pair(PREPROCESSED_X_DATA_FILE_NAME, PATH_TO_PREPROCESSED_X_DATA),
+        Pair(PREPROCESSED_Y_DATA_FILE_NAME, PATH_TO_PREPROCESSED_Y_DATA),
+    )
+    val deferredUploads = filesToUpload.map {
+        async {
+            val blobClientPreProcessedData = getBlobClientConnection(
+                storageConnectionString = storageConnectionString,
+                blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+                fileName = it.first
+            )
+            uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = it.second)
+        }
+    }
+    deferredUploads.awaitAll()
+
     // TODO: Implement connection to preprocessed Blob to store preprocessed data there
     // TODO: Integrate coroutines like in ensembleTrainingPipeline()
 
