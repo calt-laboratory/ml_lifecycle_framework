@@ -40,6 +40,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlin-deeplearning-visualization:[0.5.2]")
     implementation("org.jetbrains.exposed:exposed-core:0.44.1")
     implementation("org.jetbrains.exposed:exposed-dao:0.44.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.44.1")
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.44.1")
     implementation("org.postgresql:postgresql:42.2.27")
 
