@@ -22,6 +22,7 @@ import constants.PREPROCESSED_Y_DATA_FILE_NAME
 import constants.PROCESSED_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_FILE_NAME
+import constants.TRAINING_RESULT_DB_URL
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForKotlinDL
@@ -32,12 +33,17 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
 import org.slf4j.LoggerFactory
+import postgres.TrainingResults
+import postgres.connectToDB
+import postgres.createTable
+import postgres.insertTrainingResults
 import util.readCSVAsKotlinDF
 import util.readCSVAsKotlinDFAsync
 import util.readCSVAsSmileDFAsync
 import util.storeKotlinDFAsCSVAsync
 import util.to2DDoubleArray
 import util.toIntArray
+import java.io.File
 import kotlin.time.measureTime
 
 
@@ -70,15 +76,18 @@ fun trainingPipeline() {
  * Comprises all preprocessing steps and the training/prediction for an ensemble classifier.
  */
 fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
-    logger.info("Starting ensemble training pipeline...")
+    println("Starting ensemble training pipeline...")
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
-    val blobClient = getBlobClientConnection(
-        storageConnectionString = storageConnectionString,
-        blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
-        fileName = RAW_FILE_NAME,
-    )
-    downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+    if (!File(PATH_TO_DATASET).exists()) {
+        println("Downloading original dataset from Blob...")
+        val blobClient = getBlobClientConnection(
+            storageConnectionString = storageConnectionString,
+            blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
+            fileName = RAW_FILE_NAME,
+        )
+        downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+    }
 
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (preProcessedDF, _, _) = dataPreProcessing(df = data)
@@ -89,7 +98,7 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
         randomState = cfg.preProcessing.seed,
     )
 
-    // Store Kotlin DF's locally
+    // Store Kotlin DFs locally
     val dataframesAndPaths = listOf(
         preProcessedDF to PATH_TO_PREPROCESSED_DATASET,
         trainData to PATH_TO_PREPROCESSED_TRAIN_DATASET,
@@ -163,6 +172,11 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
 
     val acc = calculateAccuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
     println("Accuracy: $acc")
+
+    // Store training results in Postgres DB
+    connectToDB(dbURL = TRAINING_RESULT_DB_URL)
+    createTable(table = TrainingResults)
+    insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = acc)
 }
 
 
@@ -170,15 +184,18 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
  * Comprises all preprocessing steps and the training/prediction for Logistic Regression.
  */
 fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
-
+    println("Starting the Logistic Regression pipeline...")
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
-    val blobClient = getBlobClientConnection(
-        storageConnectionString = storageConnectionString,
-        blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
-        fileName = RAW_FILE_NAME,
-    )
-    downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+    if(!File(PATH_TO_DATASET).exists()) {
+        println("Downloading original dataset from Blob...")
+        val blobClient = getBlobClientConnection(
+            storageConnectionString = storageConnectionString,
+            blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
+            fileName = RAW_FILE_NAME,
+        )
+        downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+    }
 
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
@@ -241,6 +258,11 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
     // Calculate accuracy of y-predictions compared to y-test set
     val accuracy = calculateAccuracy(yTrue = yTestIntArray, yPred = predictions)
     println("Accuracy: $accuracy")
+
+    // Store training results in Postgres DB
+    connectToDB(dbURL = TRAINING_RESULT_DB_URL)
+    createTable(table = TrainingResults)
+    insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy)
 }
 
 
@@ -248,15 +270,18 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
  * Comprises all preprocessing steps and the training/prediction for a Deep Learning Classifier.
  */
 fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
-
+    println("Starting the Deep Learning Classifier pipeline...")
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
-    val blobClient = getBlobClientConnection(
-        storageConnectionString = storageConnectionString,
-        blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
-        fileName = RAW_FILE_NAME,
-    )
-    downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+    if (!File(PATH_TO_DATASET).exists()) {
+        println("Downloading original dataset from Blob...")
+        val blobClient = getBlobClientConnection(
+            storageConnectionString = storageConnectionString,
+            blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
+            fileName = RAW_FILE_NAME,
+        )
+        downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+    }
 
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (_, xData, yData) = dataPreProcessing(df = data)
@@ -294,4 +319,9 @@ fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
     val predictions = deepLearningClassifier.fitAndPredict(xData = train, yData = test)
     val accuracy = predictions.metrics[Metrics.ACCURACY]
     println("Accuracy: $accuracy")
+
+    // Store training results in Postgres DB
+    connectToDB(dbURL = TRAINING_RESULT_DB_URL)
+    createTable(table = TrainingResults)
+    insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy!!)
 }
