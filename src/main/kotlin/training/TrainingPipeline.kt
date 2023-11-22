@@ -121,7 +121,6 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
     }
     deferredUploads.awaitAll()
 
-    // TODO: Consider to refactor/improve this part
     // Read in preprocessed data
     val preProcessedTrainData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TRAIN_DATASET) }.await()
     val preProcessedTestData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TEST_DATASET) }.await()
@@ -214,9 +213,8 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
     }
     deferredUploads.awaitAll()
 
-    // TODO: Consider to refactor/improve this part
-    val prePreProcessedXData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA)
-    val prePreProcessedYData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA)
+    val prePreProcessedXData = async { readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA) }.await()
+    val prePreProcessedYData = async {readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA) }.await()
 
     val (xTrain, xTest, yTrain, yTest) = trainTestSplit(
         xData = prePreProcessedXData,
@@ -289,9 +287,6 @@ fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
         }
     }
     deferredUploads.awaitAll()
-
-    // TODO: Implement connection to preprocessed Blob to store preprocessed data there
-    // TODO: Integrate coroutines like in ensembleTrainingPipeline()
 
     val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData, trainSize = cfg.preProcessingDL.trainSize)
 
