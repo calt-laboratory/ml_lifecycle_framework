@@ -121,6 +121,7 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
     }
     deferredUploads.awaitAll()
 
+    // TODO: Consider to refactor/improve this part
     // Read in preprocessed data
     val preProcessedTrainData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TRAIN_DATASET) }.await()
     val preProcessedTestData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TEST_DATASET) }.await()
@@ -183,9 +184,6 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
 
-    // TODO: Implement connection to preprocessed Blob to store preprocessed data there
-    // TODO: Integrate coroutines like in ensembleTrainingPipeline()
-
     // Store Kotlin DF's locally
     val kotlinDFsAndPaths = listOf(
         preProcessedDF to PATH_TO_PREPROCESSED_DATASET,
@@ -204,18 +202,6 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
         Pair(PREPROCESSED_Y_DATA_FILE_NAME, PATH_TO_PREPROCESSED_Y_DATA),
     )
 
-//    val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
-//        async {
-//            val blobClientPreProcessedData = getBlobClientConnection(
-//                storageConnectionString = storageConnectionString,
-//                blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
-//                fileName = fileName
-//            )
-//            uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = localFilePath)
-//        }
-//    }
-//    deferredUploads.awaitAll()
-
     val deferredUploads = filesToUpload.map {
         async {
             val blobClientPreProcessedData = getBlobClientConnection(
@@ -228,6 +214,7 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
     }
     deferredUploads.awaitAll()
 
+    // TODO: Consider to refactor/improve this part
     val prePreProcessedXData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA)
     val prePreProcessedYData = readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA)
 
@@ -262,7 +249,7 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
 /**
  * Comprises all preprocessing steps and the training/prediction for a Deep Learning Classifier.
  */
-fun deepLearningTrainingPipeline(cfg: Config) {
+fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
 
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
@@ -275,6 +262,16 @@ fun deepLearningTrainingPipeline(cfg: Config) {
 
     val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
     val (_, xData, yData) = dataPreProcessing(df = data)
+
+    // Store Kotlin DF locally
+    val kotlinDFsAndPaths = listOf(
+        xData to PATH_TO_PREPROCESSED_X_DATA,
+        yData.toDataFrame() to PATH_TO_PREPROCESSED_Y_DATA,
+    )
+    val preProcessedKotlinDFsToStore = kotlinDFsAndPaths.map { (df, path) ->
+        async { storeKotlinDFAsCSVAsync(df, path) }
+    }
+    preProcessedKotlinDFsToStore.awaitAll()
 
     // TODO: Implement connection to preprocessed Blob to store preprocessed data there
     // TODO: Integrate coroutines like in ensembleTrainingPipeline()
