@@ -35,9 +35,13 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     // implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
     implementation("ch.qos.logback:logback-classic:1.2.9")
-    implementation ("org.jetbrains.kotlinx:kotlin-deeplearning-tensorflow:[0.5.2]")
-    implementation ("org.jetbrains.kotlinx:kotlin-deeplearning-onnx:[0.5.2]")
-    implementation ("org.jetbrains.kotlinx:kotlin-deeplearning-visualization:[0.5.2]")
+    implementation("org.jetbrains.kotlinx:kotlin-deeplearning-tensorflow:[0.5.2]")
+    implementation("org.jetbrains.kotlinx:kotlin-deeplearning-onnx:[0.5.2]")
+    implementation("org.jetbrains.kotlinx:kotlin-deeplearning-visualization:[0.5.2]")
+    implementation("org.jetbrains.exposed:exposed-core:0.44.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.44.1")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.44.1")
+    implementation("org.postgresql:postgresql:42.2.27")
 
     testImplementation(kotlin("test"))
 }
