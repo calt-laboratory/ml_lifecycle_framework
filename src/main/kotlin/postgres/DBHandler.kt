@@ -8,27 +8,40 @@ import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun connectToDB () {
-    Database.connect(
-        url = "jdbc:postgresql://localhost:5432/training_results",
-        driver = "org.postgresql.Driver",
-        user = "postgres",
-        password = System.getenv("POSTGRES_PW")
-    )
-}
-
 object TrainingResults : IntIdTable() {
     val date = datetime(name = "date").defaultExpression(CurrentDateTime)
     val algorithmName = varchar(name = "algorithm_name", length = 100)
     val accuracy = double(name = "accuracy")
 }
 
-fun createTable () {
+/**
+ * Connects to a PostgreSQL database.
+ * @param dbURL URL of the database consumed from a constant
+ */
+fun connectToDB (dbURL: String) {
+    Database.connect(
+        url = dbURL,
+        driver = "org.postgresql.Driver",
+        user = "postgres",
+        password = System.getenv("POSTGRES_PW")
+    )
+}
+
+/**
+ * Creates InIdTable in a database.
+ * @param table The table to create
+ */
+fun createTable (table: IntIdTable) {
     transaction {
-        SchemaUtils.create(TrainingResults)
+        SchemaUtils.create(table)
     }
 }
 
+/**
+ * Inserts training results into a database.
+ * @param algorithmName The name of the algorithm
+ * @param accuracy The accuracy of the model prediction
+ */
 fun insertTrainingResults (algorithmName: String, accuracy: Double) {
     transaction {
         TrainingResults.insertAndGetId {
