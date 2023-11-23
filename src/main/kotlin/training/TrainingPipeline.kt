@@ -60,13 +60,13 @@ fun trainingPipeline() {
 
     if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
         val duration = measureTime { ensembleTrainingPipeline(cfg = cfg) }
-        println("Ensemble training pipeline duration: $duration")
+        println("Ensemble training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else if (cfg.train.algorithm == "logisticRegression") {
         val duration = measureTime { logisticRegressionTrainingPipeline(cfg = cfg) }
-        println("Logistic Regression training pipeline duration: $duration")
+        println("Logistic Regression training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else if (cfg.train.algorithm == "deepLearningClassifier") {
         val duration = measureTime { deepLearningTrainingPipeline(cfg = cfg) }
-        println("Deep Learning training pipeline duration: $duration")
+        println("Deep Learning training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else {
         println("No valid algorithm specified in config file.")
     }
