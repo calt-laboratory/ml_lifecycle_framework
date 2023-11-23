@@ -40,6 +40,7 @@ import postgres.insertTrainingResults
 import util.readCSVAsKotlinDF
 import util.readCSVAsKotlinDFAsync
 import util.readCSVAsSmileDFAsync
+import util.round
 import util.storeKotlinDFAsCSVAsync
 import util.to2DDoubleArray
 import util.toIntArray
@@ -318,10 +319,15 @@ fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
     val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
     val predictions = deepLearningClassifier.fitAndPredict(xData = train, yData = test)
     val accuracy = predictions.metrics[Metrics.ACCURACY]
-    println("Accuracy: $accuracy")
+
+    accuracy?.let { nonNullAccuracy ->
+        println("Accuracy: ${round(value = nonNullAccuracy, places = 4)}")
+    }
 
     // Store training results in Postgres DB
     connectToDB(dbURL = TRAINING_RESULT_DB_URL)
     createTable(table = TrainingResults)
-    insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy!!)
+    accuracy?.let { nonNullAccuracy ->
+        insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = round(value = nonNullAccuracy, places = 4))
+    }
 }
