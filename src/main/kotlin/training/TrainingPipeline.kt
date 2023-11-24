@@ -30,6 +30,7 @@ import dataProcessing.trainTestSplitForSmile
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import mlflow.logMlflowInfos
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
 import org.slf4j.LoggerFactory
@@ -178,6 +179,17 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
     connectToDB(dbURL = TRAINING_RESULT_DB_URL)
     createTable(table = TrainingResults)
     insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = acc)
+
+    // Log MLflow infos
+    logMlflowInfos(
+        metricKey = "accuracy",
+        metricValue = acc,
+        paramKey = "algorithm",
+        paramValue = cfg.train.algorithm,
+        tagKey = "dataset",
+        tagValue = "breast_cancer",
+        experimentName = "breast_cancer",
+    )
 }
 
 
