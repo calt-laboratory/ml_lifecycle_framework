@@ -43,6 +43,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:0.44.1")
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.44.1")
     implementation("org.postgresql:postgresql:42.2.27")
+    implementation("org.mlflow:mlflow-client:2.8.1")
 
     testImplementation(kotlin("test"))
 }
