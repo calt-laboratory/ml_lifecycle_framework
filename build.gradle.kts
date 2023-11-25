@@ -28,7 +28,7 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("org.jetbrains.kotlinx:dataframe:0.11.1")
     implementation("com.github.haifengl:smile-kotlin:3.0.1")
-    implementation("com.azure:azure-storage-blob:12.18.0")
+    implementation("com.azure:azure-storage-blob:12.25.0")
     implementation("org.yaml:snakeyaml:2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("com.charleskorn.kaml:kaml:0.55.0")
@@ -44,6 +44,11 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.44.1")
     implementation("org.postgresql:postgresql:42.2.27")
     implementation("org.mlflow:mlflow-client:2.8.1")
+    implementation("com.sealwu:kscript-tools:1.0.22")
+    implementation(platform("org.http4k:http4k-bom:5.10.4.0"))
+    implementation("org.http4k:http4k-core")
+    implementation("org.http4k:http4k-server-jetty")
+    implementation("org.http4k:http4k-client-okhttp")
 
     testImplementation(kotlin("test"))
 }

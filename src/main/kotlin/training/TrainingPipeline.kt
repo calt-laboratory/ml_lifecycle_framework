@@ -184,9 +184,14 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
     insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = acc)
 
     // Log MLflow infos
-    val (mlflowClient, runID) = createOrGetMlflowExperiment(name = MLFLOW_EXPERIMENT_NAME, mlflowClient = getMlflowClient())
+    val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
+    val (mlflowClientForExperiment, runID) = createOrGetMlflowExperiment(
+        name = MLFLOW_EXPERIMENT_NAME,
+        mlflowClient = mlflowClient,
+        isMlflowServerRunning = isMlflowServerRunning,
+        )
     logMlflowInformation(
-        client = mlflowClient,
+        client = mlflowClientForExperiment,
         runID = runID,
         metricKey = "accuracy",
         metricValue = acc,
