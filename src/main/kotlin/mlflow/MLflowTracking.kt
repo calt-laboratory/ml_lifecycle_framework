@@ -1,38 +1,53 @@
 package mlflow
 
-import org.mlflow.api.proto.Service.RunStatus
+import constants.MLFLOW_TRACKING_URI
+import org.mlflow.tracking.MlflowClient
 import org.mlflow.tracking.MlflowContext
 
-fun logMlflowInfos(
+fun logMlflowInformation(
+    client: MlflowClient,
+    runID: String?,
     metricKey: String?,
     metricValue: Double?,
     paramKey: String?,
     paramValue: String?,
     tagKey: String?,
     tagValue: String?,
-    experimentName: String,
     ) {
 
-    RunStatus.FINISHED
-
-
-    val MLFLOW_TRACKING_URI = "http://localhost:5000"
-
-    val mlflowContext = MlflowContext(MLFLOW_TRACKING_URI)
-    val client = mlflowContext.client
-
-    val experimentID = client.createExperiment(experimentName)
-    val runInfo = client.createRun(experimentID)
-
     if (metricKey != null && metricValue != null) {
-        client.logMetric(runInfo.runId, metricKey, metricValue)
+        client.logMetric(runID, metricKey, metricValue)
     }
 
     if (paramKey != null && paramValue != null) {
-        client.logParam(runInfo.runId, paramKey, paramValue)
+        client.logParam(runID, paramKey, paramValue)
     }
 
     if (tagKey != null && tagValue != null) {
-        client.setTag(runInfo.runId, tagKey, tagValue)
+        client.setTag(runID, tagKey, tagValue)
     }
 }
+
+
+fun getMlflowClient() : MlflowClient {
+    return MlflowContext(MLFLOW_TRACKING_URI).client
+}
+
+
+fun createOrGetMlflowExperiment(name: String, mlflowClient: MlflowClient) : Pair<MlflowClient, String?> {
+
+    var experimentID: String? = null
+    try {
+        experimentID = mlflowClient.getExperimentByName(name).get().experimentId
+        println("Experiment $name was found")
+    } catch (e: NoSuchElementException) {
+        experimentID = mlflowClient.createExperiment(name)
+        println("New experiment $name created")
+    }
+
+    val runInfo = mlflowClient.createRun(experimentID)
+
+    return Pair(mlflowClient, runInfo.runId)
+}
+
+
