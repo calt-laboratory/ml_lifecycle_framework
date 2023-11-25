@@ -50,24 +50,18 @@ fun getMlflowClient() : Pair<MlflowClient, Boolean> {
 }
 
 
-fun createOrGetMlflowExperiment(name: String, mlflowClient: MlflowClient, isMlflowServerRunning: Boolean) : Pair<MlflowClient, String?> {
-
-    val os = System.getProperty("os.name").lowercase()
+fun createOrGetMlflowExperiment(
+    name: String,
+    mlflowClient: MlflowClient,
+    isMlflowServerRunning: Boolean,
+    ) : Pair<MlflowClient, String?>
+{
 
     if (!isMlflowServerRunning) {
-        println("MLflow tracking server is not running. Connection to Mlflow Tracking URI failed")
-        println("Starting MLflow Tracking server...")
-        if (os.contains("linux") or os.contains("mac")) {
-            println("Operating system: $os")
-            "mlflow server".runCommand()
-        } else if (os.contains("windows")) {
-            println("Operating system: $os")
-            Runtime.getRuntime().exec("mlflow server").waitFor(30, TimeUnit.SECONDS)
-            println("MLflow Tracking server started")
-        }
+        startMlflowServer()
     }
 
-    var experimentID: String? = null
+    var experimentID: String?
     try {
         experimentID = mlflowClient.getExperimentByName(name).get().experimentId
         println("Experiment '$name' was found")
@@ -75,10 +69,23 @@ fun createOrGetMlflowExperiment(name: String, mlflowClient: MlflowClient, isMlfl
         experimentID = mlflowClient.createExperiment(name)
         println("New experiment '$name' created")
     }
-
     val runInfo = mlflowClient.createRun(experimentID)
 
     return Pair(mlflowClient, runInfo?.runId)
 }
 
 
+fun startMlflowServer() {
+    val os = System.getProperty("os.name").lowercase()
+    println("MLflow tracking server is not running")
+    println("Starting MLflow Tracking server...")
+    if (os.contains("linux") or os.contains("mac")) {
+        println("Using operating system: $os")
+        "mlflow server".runCommand()
+        println("MLflow Tracking server is running")
+    } else if (os.contains("windows")) {
+        println("Using operating system: $os")
+        Runtime.getRuntime().exec("mlflow server").waitFor(30, TimeUnit.SECONDS)
+        println("MLflow Tracking server is running")
+    }
+}
