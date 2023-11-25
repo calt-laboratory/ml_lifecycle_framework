@@ -2,6 +2,7 @@ package mlflow
 
 import constants.MLFLOW_TRACKING_URI
 import org.mlflow.tracking.MlflowClient
+import org.mlflow.tracking.MlflowClientException
 import org.mlflow.tracking.MlflowContext
 
 fun logMlflowInformation(
@@ -46,12 +47,19 @@ fun createOrGetMlflowExperiment(name: String, mlflowClient: MlflowClient) : Pair
     try {
         experimentID = mlflowClient.getExperimentByName(name).get().experimentId
         println("Experiment $name was found")
-        // UnknownHostException
-        // HttpHostConnectException
-        // MlflowClientException
-    } catch (e: NoSuchElementException) {
-        experimentID = mlflowClient.createExperiment(name)
-        println("New experiment $name created")
+    } catch (e: Exception) {
+        when (e) {
+            is NoSuchElementException -> {
+                experimentID = mlflowClient.createExperiment(name)
+                println("New experiment $name created: $e")
+            }
+            is MlflowClientException -> {
+                println("MLflow tracking server is not running. Connection to Mlflow Tracking URI failed $e")
+            }
+            else -> {
+                println("Unknown exception: $e")
+            }
+        }
     }
 
     val runInfo = mlflowClient.createRun(experimentID)
