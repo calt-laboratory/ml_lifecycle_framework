@@ -30,7 +30,13 @@ fun logMlflowInformation(
 
 
 fun getMlflowClient() : MlflowClient {
-    return MlflowContext(MLFLOW_TRACKING_URI).client
+    return try {
+        MlflowContext(MLFLOW_TRACKING_URI).client
+    } catch (e: IllegalArgumentException) {
+        println("MLflow tracking URI is not set. Using local host.")
+        val localHost = "http://127.0.0.1:5000"
+        MlflowContext(localHost).client
+    }
 }
 
 
@@ -40,6 +46,9 @@ fun createOrGetMlflowExperiment(name: String, mlflowClient: MlflowClient) : Pair
     try {
         experimentID = mlflowClient.getExperimentByName(name).get().experimentId
         println("Experiment $name was found")
+        // UnknownHostException
+        // HttpHostConnectException
+        // MlflowClientException
     } catch (e: NoSuchElementException) {
         experimentID = mlflowClient.createExperiment(name)
         println("New experiment $name created")
