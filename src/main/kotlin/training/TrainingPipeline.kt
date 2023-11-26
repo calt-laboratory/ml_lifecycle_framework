@@ -31,8 +31,8 @@ import dataProcessing.trainTestSplitForSmile
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import mlflow.createOrGetMlflowExperiment
 import mlflow.getMlflowClient
+import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
@@ -185,7 +185,7 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
 
     // Log MLflow infos
     val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
-    val (mlflowClientForExperiment, runID) = createOrGetMlflowExperiment(
+    val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
         name = MLFLOW_EXPERIMENT_NAME,
         mlflowClient = mlflowClient,
         isMlflowServerRunning = isMlflowServerRunning,

@@ -7,6 +7,10 @@ import org.mlflow.tracking.MlflowContext
 import runCommand
 import java.util.concurrent.TimeUnit
 
+
+/**
+ * Logs a metric, a parameter and a tag to MLflow.
+ */
 fun logMlflowInformation(
     client: MlflowClient,
     runID: String?,
@@ -34,7 +38,10 @@ fun logMlflowInformation(
     }
 }
 
-
+/**
+ * Gets a Mlflow client based on the MLFLOW_TRACKING_URI and checks if the MLflow server is running.
+ * @return Pair of MlflowClient and Boolean (if the MLflow server is running)
+ */
 fun getMlflowClient() : Pair<MlflowClient, Boolean> {
     return try {
         val client = MlflowContext(MLFLOW_TRACKING_URI).client
@@ -49,19 +56,20 @@ fun getMlflowClient() : Pair<MlflowClient, Boolean> {
     }
 }
 
-
-fun createOrGetMlflowExperiment(
+/**
+ * Gets a Mlflow experiment by name or creates a new one if it does not exist.
+ */
+fun getOrCreateMlflowExperiment(
     name: String,
     mlflowClient: MlflowClient,
     isMlflowServerRunning: Boolean,
     ) : Pair<MlflowClient, String?>
 {
-
     if (!isMlflowServerRunning) {
         startMlflowServer()
     }
+    var experimentID: String
 
-    var experimentID: String?
     try {
         experimentID = mlflowClient.getExperimentByName(name).get().experimentId
         println("Experiment '$name' was found")
@@ -69,15 +77,16 @@ fun createOrGetMlflowExperiment(
         experimentID = mlflowClient.createExperiment(name)
         println("New experiment '$name' created")
     }
-    val runInfo = mlflowClient.createRun(experimentID)
 
-    return Pair(mlflowClient, runInfo?.runId)
+    val runInfo = mlflowClient.createRun(experimentID)
+    return Pair(mlflowClient, runInfo.runId)
 }
 
-
+/**
+ * Starts a MLflow Tracking using a cli command based on the operating system (Linux, Mac, Windows).
+ */
 fun startMlflowServer() {
     val os = System.getProperty("os.name").lowercase()
-    println("MLflow tracking server is not running")
     println("Starting MLflow Tracking server...")
     if (os.contains("linux") or os.contains("mac")) {
         println("Using operating system: $os")
@@ -85,7 +94,7 @@ fun startMlflowServer() {
         println("MLflow Tracking server is running")
     } else if (os.contains("windows")) {
         println("Using operating system: $os")
-        Runtime.getRuntime().exec("mlflow server").waitFor(30, TimeUnit.SECONDS)
+        Runtime.getRuntime().exec("mlflow server").waitFor(25, TimeUnit.SECONDS)
         println("MLflow Tracking server is running")
     }
 }
