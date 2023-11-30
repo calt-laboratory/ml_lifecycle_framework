@@ -27,3 +27,10 @@ fun recall(yTrue: IntArray, yPred: IntArray) : Double {
     val falseNegatives = yTrue.zip(yPred).count { (a, b) -> a != b && a == 1 }
     return round(value = truePositives.toDouble() / (truePositives + falseNegatives), places = 4)
 }
+
+fun f1Score(yTrue: IntArray, yPred: IntArray) : Double {
+    require(value = yTrue.size == yPred.size) { "Arrays must have the same size" }
+    val precision = precision(yTrue, yPred)
+    val recall = recall(yTrue, yPred)
+    return round(value = 2 * (precision * recall) / (precision + recall), places = 4)
+}
