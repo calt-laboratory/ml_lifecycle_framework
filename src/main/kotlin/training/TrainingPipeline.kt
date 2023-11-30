@@ -35,7 +35,6 @@ import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
 import org.slf4j.LoggerFactory
 import postgres.TrainingResults
 import postgres.connectToDB
@@ -357,8 +356,7 @@ fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
     val (train, test) = trainTestSplitForKotlinDL(xData = xData, yData = yData, trainSize = cfg.preProcessingDL.trainSize)
 
     val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
-    val predictions = deepLearningClassifier.fitAndPredict(xData = train, yData = test)
-    val accuracy = predictions.metrics[Metrics.ACCURACY]
+    val accuracy = deepLearningClassifier.fitAndPredict(trainData = train, testData = test)
 
     accuracy?.let { nonNullAccuracy ->
         println("Accuracy: ${round(value = nonNullAccuracy, places = 4)}")

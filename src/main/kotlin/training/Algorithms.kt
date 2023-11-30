@@ -8,7 +8,6 @@ import org.jetbrains.kotlinx.dl.api.core.initializer.Zeros
 import org.jetbrains.kotlinx.dl.api.core.layer.core.Dense
 import org.jetbrains.kotlinx.dl.api.core.layer.core.Input
 import org.jetbrains.kotlinx.dl.api.core.loss.Losses
-import org.jetbrains.kotlinx.dl.api.core.metric.EvaluationResult
 import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
 import org.jetbrains.kotlinx.dl.api.core.optimizer.SGD
 import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
@@ -169,16 +168,19 @@ class DeepLearningClassifier(private val cfg: Config) {
             ),
     )
 
-    fun fitAndPredict(xData: OnHeapDataset, yData: OnHeapDataset) : EvaluationResult {
+    fun fitAndPredict(trainData: OnHeapDataset, testData: OnHeapDataset) : Double? {
         model.use {
             it.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
             it.logSummary()
             it.fit(
-                dataset = xData,
+                dataset = trainData,
                 epochs = cfg.train.deepLearningClassifier.epochs,
                 batchSize = cfg.train.deepLearningClassifier.trainBatchSize,
                 )
-            return model.evaluate(dataset = yData, batchSize = cfg.train.deepLearningClassifier.testBatchSize)
+            return it.evaluate(
+                dataset = testData,
+                batchSize = cfg.train.deepLearningClassifier.testBatchSize
+            ).metrics[Metrics.ACCURACY]
         }
     }
 }
