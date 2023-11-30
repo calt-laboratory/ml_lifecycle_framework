@@ -178,6 +178,15 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
     val acc = calculateAccuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
     println("Accuracy: $acc")
 
+    val precision = precision(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
+    println("Precision: $precision")
+
+    val recall = recall(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
+    println("Recall: $recall")
+
+    val f1Score = f1Score(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
+    println("F1-Score: $f1Score")
+
     // Store training results in Postgres DB
     connectToDB(dbURL = TRAINING_RESULT_DB_URL)
     createTable(table = TrainingResults)
@@ -281,6 +290,15 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
     // Calculate accuracy of y-predictions compared to y-test set
     val accuracy = calculateAccuracy(yTrue = yTestIntArray, yPred = predictions)
     println("Accuracy: $accuracy")
+
+    val precision = precision(yTrue = yTestIntArray, yPred = predictions)
+    println("Precision: $precision")
+
+    val recall = recall(yTrue = yTestIntArray, yPred = predictions)
+    println("Recall: $recall")
+
+    val f1Score = f1Score(yTrue = yTestIntArray, yPred = predictions)
+    println("F1-Score: $f1Score")
 
     // Store training results in Postgres DB
     connectToDB(dbURL = TRAINING_RESULT_DB_URL)
