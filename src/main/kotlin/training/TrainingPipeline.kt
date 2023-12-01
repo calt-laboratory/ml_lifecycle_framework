@@ -63,15 +63,15 @@ fun trainingPipeline() {
 
     if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
         val duration = measureTime { ensembleTrainingPipeline(cfg = cfg) }
-        println("Ensemble training pipeline duration: ${duration.inWholeSeconds} seconds")
+        logger.info("Ensemble training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else if (cfg.train.algorithm == "logisticRegression") {
         val duration = measureTime { logisticRegressionTrainingPipeline(cfg = cfg) }
-        println("Logistic Regression training pipeline duration: ${duration.inWholeSeconds} seconds")
+        logger.info("Logistic Regression training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else if (cfg.train.algorithm == "deepLearningClassifier") {
         val duration = measureTime { deepLearningTrainingPipeline(cfg = cfg) }
-        println("Deep Learning training pipeline duration: ${duration.inWholeSeconds} seconds")
+        logger.info("Deep Learning training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else {
-        println("No valid algorithm specified in config file.")
+        logger.info("No valid algorithm specified in config file.")
     }
 }
 
@@ -80,11 +80,11 @@ fun trainingPipeline() {
  * Comprises all preprocessing steps and the training/prediction for an ensemble classifier.
  */
 fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
-    println("Starting ensemble training pipeline...")
+    logger.info("Starting ensemble training pipeline...")
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
     if (!File(PATH_TO_DATASET).exists()) {
-        println("Downloading original dataset from Blob...")
+        logger.info("Downloading original dataset from Blob...")
         val blobClient = getBlobClientConnection(
             storageConnectionString = storageConnectionString,
             blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
@@ -141,50 +141,47 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
 
     var predictions = intArrayOf()
 
-    // TODO: Implement logger to replace print statements
-
     when(cfg.train.algorithm) {
         "decisionTree" -> {
             val model = DecisionTreeClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
             logger.info("Decision Tree training started.")
-            println("Decision Tree")
+
         }
         "randomForest" -> {
             val model = RandomForestClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
             logger.info("Random Forest training started.")
-            println("Random Forest")
         }
         "adaBoost" -> {
-            logger.info("AdaBoost training started.")
+//            logger.info("AdaBoost training started.")
             val model = AdaBoostClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
-            println("AdaBoost")
+            logger.info("AdaBoost training started.")
         }
         "gradientBoosting" -> {
-            logger.info("Gradient Boosting training started.")
+//            logger.info("Gradient Boosting training started.")
             val model = GradientBoostingClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
-            println("Gradient Boosting")
+            logger.info("Gradient Boosting training started."   )
         }
     }
 
     val acc = calculateAccuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
-    println("Accuracy: $acc")
+    logger.info("Accuracy: $acc")
 
     val precision = precision(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
-    println("Precision: $precision")
+    logger.info("Precision: $precision")
 
     val recall = recall(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
-    println("Recall: $recall")
+    logger.info("Recall: $recall")
 
     val f1Score = f1Score(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
-    println("F1-Score: $f1Score")
+    logger.info("F1-Score: $f1Score")
 
     // Store training results in Postgres DB
     connectToDB(dbURL = TRAINING_RESULT_DB_URL)
