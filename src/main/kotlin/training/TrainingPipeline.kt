@@ -307,11 +307,11 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
  * Comprises all preprocessing steps and the training/prediction for a Deep Learning Classifier.
  */
 fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
-    println("Starting the Deep Learning Classifier pipeline...")
+    logger.info("Starting the Deep Learning Classifier pipeline...")
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
     if (!File(PATH_TO_DATASET).exists()) {
-        println("Downloading original dataset from Blob...")
+        logger.info("Downloading original dataset from Blob...")
         val blobClient = getBlobClientConnection(
             storageConnectionString = storageConnectionString,
             blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
@@ -354,9 +354,10 @@ fun deepLearningTrainingPipeline(cfg: Config) = runBlocking {
 
     val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
     val accuracy = deepLearningClassifier.fitAndPredict(trainData = train, testData = test)
+    logger.info("Deep Learning training started")
 
     accuracy?.let { nonNullAccuracy ->
-        println("Accuracy: ${round(value = nonNullAccuracy, places = 4)}")
+        logger.info("Accuracy: ${round(value = nonNullAccuracy, places = 4)}")
     }
 
     // Store training results in Postgres DB
