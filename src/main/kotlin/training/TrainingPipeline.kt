@@ -212,11 +212,11 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
  * Comprises all preprocessing steps and the training/prediction for Logistic Regression.
  */
 fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
-    println("Starting the Logistic Regression pipeline...")
+    logger.info("Starting the Logistic Regression pipeline...")
     val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
     if(!File(PATH_TO_DATASET).exists()) {
-        println("Downloading original dataset from Blob...")
+        logger.info("Downloading original dataset from Blob...")
         val blobClient = getBlobClientConnection(
             storageConnectionString = storageConnectionString,
             blobContainerName = RAW_DATA_BLOB_CONTAINER_NAME,
@@ -281,20 +281,20 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
     logisticRegression.fit(xTrain = xTrainDoubleArray, yTrain = yTrainIntArray)
     // Calculate y-predictions based on the x-test set
     val predictions = logisticRegression.predict(xTest = xTestDoubleArray)
-    println("Logistic Regression")
+    logger.info("Logistic Regression training started")
 
     // Calculate accuracy of y-predictions compared to y-test set
     val accuracy = calculateAccuracy(yTrue = yTestIntArray, yPred = predictions)
-    println("Accuracy: $accuracy")
+    logger.info("Accuracy: $accuracy")
 
     val precision = precision(yTrue = yTestIntArray, yPred = predictions)
-    println("Precision: $precision")
+    logger.info("Precision: $precision")
 
     val recall = recall(yTrue = yTestIntArray, yPred = predictions)
-    println("Recall: $recall")
+    logger.info("Recall: $recall")
 
     val f1Score = f1Score(yTrue = yTestIntArray, yPred = predictions)
-    println("F1-Score: $f1Score")
+    logger.info("F1-Score: $f1Score")
 
     // Store training results in Postgres DB
     connectToDB(dbURL = TRAINING_RESULT_DB_URL)
