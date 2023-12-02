@@ -1,5 +1,7 @@
 package dataProcessing
 
+import datatypeHandling.to2DFloatArray
+import datatypeHandling.toFloatArray
 import org.jetbrains.kotlinx.dataframe.DataColumn
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.count
@@ -8,8 +10,6 @@ import org.jetbrains.kotlinx.dataframe.api.remove
 import org.jetbrains.kotlinx.dataframe.api.replace
 import org.jetbrains.kotlinx.dataframe.api.with
 import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
-import util.to2DFloatArray
-import util.toFloatArray
 import kotlin.random.Random
 
 data class PreProcessedDataset(val df: DataFrame<Any?>, val xData: DataFrame<Any?>, val yData: DataColumn<*>)

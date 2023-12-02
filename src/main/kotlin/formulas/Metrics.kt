@@ -1,6 +1,5 @@
-package training
+package formulas
 
-import util.round
 
 /**
  * Calculates the rounded accuracy of a model.

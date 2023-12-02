@@ -1,4 +1,4 @@
-package util
+package datatypeHandling
 
 import org.jetbrains.kotlinx.dataframe.DataColumn
 import org.jetbrains.kotlinx.dataframe.DataFrame

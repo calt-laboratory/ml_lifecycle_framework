@@ -28,9 +28,20 @@ import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForKotlinDL
 import dataProcessing.trainTestSplitForSmile
+import datatypeHandling.to2DDoubleArray
+import datatypeHandling.toIntArray
+import formulas.calculateAccuracy
+import formulas.f1Score
+import formulas.precision
+import formulas.recall
+import formulas.round
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import localFileManagement.readCSVAsKotlinDF
+import localFileManagement.readCSVAsKotlinDFAsync
+import localFileManagement.readCSVAsSmileDFAsync
+import localFileManagement.storeKotlinDFAsCSVAsync
 import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
@@ -40,18 +51,11 @@ import postgres.TrainingResults
 import postgres.connectToDB
 import postgres.createTable
 import postgres.insertTrainingResults
-import util.readCSVAsKotlinDF
-import util.readCSVAsKotlinDFAsync
-import util.readCSVAsSmileDFAsync
-import util.round
-import util.storeKotlinDFAsCSVAsync
-import util.to2DDoubleArray
-import util.toIntArray
 import java.io.File
 import kotlin.time.measureTime
 
 
-private val logger = LoggerFactory.getLogger("TrainingPipeline")
+private val logger = LoggerFactory.getLogger("TrainingPipeline.kt")
 
 /**
  * Provides various training pipelines (e.g. for ensemble classifiers or logistic regression).
@@ -71,7 +75,7 @@ fun trainingPipeline() {
         val duration = measureTime { deepLearningTrainingPipeline(cfg = cfg) }
         logger.info("Deep Learning training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else {
-        logger.info("No valid algorithm specified in config file.")
+        logger.info("No valid algorithm specified in config file")
     }
 }
 
@@ -146,28 +150,28 @@ fun ensembleTrainingPipeline(cfg: Config) = runBlocking {
             val model = DecisionTreeClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
-            logger.info("Decision Tree training started.")
+            logger.info("Decision Tree training started")
 
         }
         "randomForest" -> {
             val model = RandomForestClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
-            logger.info("Random Forest training started.")
+            logger.info("Random Forest training started")
         }
         "adaBoost" -> {
 //            logger.info("AdaBoost training started.")
             val model = AdaBoostClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
-            logger.info("AdaBoost training started.")
+            logger.info("AdaBoost training started")
         }
         "gradientBoosting" -> {
 //            logger.info("Gradient Boosting training started.")
             val model = GradientBoostingClassifier(cfg = cfg)
             model.fit(trainDF = preProcessedTrainData)
             predictions = model.predict(testDF = preProcessedTestData)
-            logger.info("Gradient Boosting training started."   )
+            logger.info("Gradient Boosting training started"   )
         }
     }
 
@@ -259,7 +263,7 @@ fun logisticRegressionTrainingPipeline(cfg: Config) = runBlocking {
     deferredUploads.awaitAll()
 
     val prePreProcessedXData = async { readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA) }.await()
-    val prePreProcessedYData = async {readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA) }.await()
+    val prePreProcessedYData = async { readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA) }.await()
 
     val (xTrain, xTest, yTrain, yTest) = trainTestSplit(
         xData = prePreProcessedXData,
