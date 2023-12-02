@@ -1,7 +1,7 @@
 
 import config.readYamlConfig
 import constants.PATH_TO_YAML_CONFIG
-import logging.GlobalLogger
+import logging.ProjectLogger.logger
 import training.multipleTrainingPipelineRunner
 import training.trainingPipelineRunner
 import kotlin.time.measureTime
@@ -18,7 +18,7 @@ fun main() {
         trainingPipelineRunner(algorithm = cfg.train.algorithm)
     } else if (cfg.train.runner == multipleTrainingPipelineRunner.runnerName) {
         val duration = measureTime { multipleTrainingPipelineRunner(algorithmsList = cfg.train.multipleAlgorithms) }
-        GlobalLogger.logger.info("Multiple training pipeline duration: ${duration.inWholeSeconds} seconds")
+        logger.info("Multiple training pipeline duration: ${duration.inWholeSeconds} seconds")
     }
 
 

@@ -42,7 +42,7 @@ import localFileManagement.readCSVAsKotlinDF
 import localFileManagement.readCSVAsKotlinDFAsync
 import localFileManagement.readCSVAsSmileDFAsync
 import localFileManagement.storeKotlinDFAsCSVAsync
-import logging.GlobalLogger.logger
+import logging.ProjectLogger.logger
 import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation

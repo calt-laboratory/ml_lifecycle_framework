@@ -2,7 +2,7 @@ package mlflow
 
 import constants.MLFLOW_TRACKING_URI
 import httpServices.isMlflowServerRunning
-import logging.GlobalLogger.logger
+import logging.ProjectLogger.logger
 import org.mlflow.tracking.MlflowClient
 import org.mlflow.tracking.MlflowContext
 import runCommand
