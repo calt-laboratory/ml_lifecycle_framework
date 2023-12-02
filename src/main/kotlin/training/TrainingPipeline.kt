@@ -42,11 +42,11 @@ import localFileManagement.readCSVAsKotlinDF
 import localFileManagement.readCSVAsKotlinDFAsync
 import localFileManagement.readCSVAsSmileDFAsync
 import localFileManagement.storeKotlinDFAsCSVAsync
+import logging.GlobalLogger.logger
 import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import org.slf4j.LoggerFactory
 import postgres.TrainingResults
 import postgres.connectToDB
 import postgres.createTable
@@ -55,23 +55,21 @@ import java.io.File
 import kotlin.time.measureTime
 
 
-private val logger = LoggerFactory.getLogger("TrainingPipeline.kt")
-
 /**
  * Provides various training pipelines (e.g. for ensemble classifiers or logistic regression).
  */
-fun trainingPipeline() {
+fun trainingPipelineRunner(algorithm: String) {
     val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
 
     // TODO: Replace if with when
 
-    if (cfg.train.algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
+    if (algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
         val duration = measureTime { ensembleTrainingPipeline(cfg = cfg) }
         logger.info("Ensemble training pipeline duration: ${duration.inWholeSeconds} seconds")
-    } else if (cfg.train.algorithm == "logisticRegression") {
+    } else if (algorithm == "logisticRegression") {
         val duration = measureTime { logisticRegressionTrainingPipeline(cfg = cfg) }
         logger.info("Logistic Regression training pipeline duration: ${duration.inWholeSeconds} seconds")
-    } else if (cfg.train.algorithm == "deepLearningClassifier") {
+    } else if (algorithm == "deepLearningClassifier") {
         val duration = measureTime { deepLearningTrainingPipeline(cfg = cfg) }
         logger.info("Deep Learning training pipeline duration: ${duration.inWholeSeconds} seconds")
     } else {

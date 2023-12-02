@@ -2,14 +2,12 @@ package mlflow
 
 import constants.MLFLOW_TRACKING_URI
 import httpServices.isMlflowServerRunning
+import logging.GlobalLogger.logger
 import org.mlflow.tracking.MlflowClient
 import org.mlflow.tracking.MlflowContext
-import org.slf4j.LoggerFactory
 import runCommand
 import java.util.concurrent.TimeUnit
 
-
-private val logger = LoggerFactory.getLogger("MLflowTracking.kt")
 
 /**
  * Logs a metric, a parameter and a tag to MLflow.
@@ -75,7 +73,7 @@ fun getOrCreateMlflowExperiment(
 
     try {
         experimentID = mlflowClient.getExperimentByName(name).get().experimentId
-        logger.info("Experiment '$name' was found")
+        logger.info("MLflow experiment '$name' was found")
     } catch (e: NoSuchElementException) {
         experimentID = mlflowClient.createExperiment(name)
         logger.info("New experiment '$name' created")

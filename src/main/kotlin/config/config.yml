@@ -1,6 +1,11 @@
 train:
-  algorithm: "randomForest"
+
+  runner: "multipleTrainingPipelineRunner" # "multipleTrainingPipelineRunner", "trainingPipelineRunner"
+
+  algorithm: "decisionTree"
   # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
+
+  multipleAlgorithms: ["decisionTree", "randomForest", "adaBoost"]
 
   decisionTree:
     splitRule: GINI
@@ -21,9 +26,9 @@ train:
 
   adaBoost:
     nTrees: 500
-    maxDepth: 20
-    maxNodes: 6
-    nodeSize: 1
+    maxDepth: 50
+    maxNodes: 10
+    nodeSize: 2
 
   gradientBoosting:
     nTrees: 500

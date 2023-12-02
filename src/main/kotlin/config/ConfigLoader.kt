@@ -8,7 +8,9 @@ import java.util.stream.LongStream
 
 @Serializable
 data class TrainConfig(
+    val runner: String,
     val algorithm: String,
+    val multipleAlgorithms: List<String>,
     val decisionTree: DecisionTreeConfig,
     val randomForest: RandomForestConfig,
     val adaBoost: AdaBoostConfig,
