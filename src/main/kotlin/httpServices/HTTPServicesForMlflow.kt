@@ -4,6 +4,10 @@ import org.http4k.client.OkHttp
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Status
+import org.slf4j.LoggerFactory
+
+
+private val logger = LoggerFactory.getLogger("HTTPServicesForMlflow.kt")
 
 
 /**
@@ -14,11 +18,18 @@ import org.http4k.core.Status
 fun isMlflowServerRunning(mlflowTrackingUri: String) : Boolean {
     return try {
         val response = OkHttp()(Request(Method.GET, mlflowTrackingUri))
-        println("MLflow tracking server is running")
+        logger.info("MLflow tracking server is running")
         response.status == Status.OK
     } catch (e: Exception) {
-        println("Exception: $e")
-        println("MLflow tracking server is not running")
+        logger.info("MLflow tracking server is not running")
+        logger.info("Exception: $e")
         false
     }
 }
+
+fun stopMlflowServer() {
+    val client = OkHttp()
+    val request = Request(Method.POST, "http://127.0.0.1:5000/shutdown")
+    client(request)
+}
+
