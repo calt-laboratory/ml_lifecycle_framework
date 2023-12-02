@@ -20,8 +20,6 @@ fun main() {
         val duration = measureTime { multipleTrainingPipelineRunner(algorithmsList = cfg.train.multipleAlgorithms) }
         logger.info("Multiple training pipeline duration: ${duration.inWholeSeconds} seconds")
     }
-
-
 }
 
 enum class RunnerType(val runnerName: String) {
