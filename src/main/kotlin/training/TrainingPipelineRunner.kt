@@ -2,7 +2,7 @@ package training
 
 import config.readYamlConfig
 import constants.PATH_TO_YAML_CONFIG
-import logging.ProjectLogger
+import logging.ProjectLogger.logger
 import kotlin.time.measureTime
 
 /**
@@ -14,15 +14,18 @@ fun trainingPipelineRunner(algorithm: String) {
     // TODO: Replace if with when
 
     if (algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
-        val duration = measureTime { EnsembleTrainingPipeline(cfg = cfg).execute() }
-        ProjectLogger.logger.info("Ensemble training pipeline duration: ${duration.inWholeSeconds} seconds")
+        executePipeline(pipeline = EnsembleTrainingPipeline(cfg = cfg))
     } else if (algorithm == "logisticRegression") {
-        val duration = measureTime { LogisticRegressionTrainingPipeline(cfg = cfg).execute() }
-        ProjectLogger.logger.info("Logistic Regression training pipeline duration: ${duration.inWholeSeconds} seconds")
+        executePipeline(pipeline = LogisticRegressionTrainingPipeline(cfg = cfg))
     } else if (algorithm == "deepLearningClassifier") {
-        val duration = measureTime { DeepLearningTrainingPipeline(cfg = cfg).execute() }
-        ProjectLogger.logger.info("Deep Learning training pipeline duration: ${duration.inWholeSeconds} seconds")
+        executePipeline(pipeline = DeepLearningTrainingPipeline(cfg = cfg))
     } else {
-        ProjectLogger.logger.info("No valid algorithm specified in config file")
+        logger.info("No valid algorithm specified in config file")
     }
+}
+
+
+fun executePipeline(pipeline: TrainingPipeline) {
+    val duration = measureTime { pipeline.execute() }
+    logger.info("${pipeline::class.simpleName} duration: ${duration.inWholeSeconds} seconds")
 }
