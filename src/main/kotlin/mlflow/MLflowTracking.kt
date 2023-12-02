@@ -4,9 +4,12 @@ import constants.MLFLOW_TRACKING_URI
 import httpServices.isMlflowServerRunning
 import org.mlflow.tracking.MlflowClient
 import org.mlflow.tracking.MlflowContext
+import org.slf4j.LoggerFactory
 import runCommand
 import java.util.concurrent.TimeUnit
 
+
+private val logger = LoggerFactory.getLogger("MLflowTracking.kt")
 
 /**
  * Logs a metric, a parameter and a tag to MLflow.
@@ -24,17 +27,17 @@ fun logMlflowInformation(
 
     if (metricKey != null && metricValue != null) {
         client.logMetric(runID, metricKey, metricValue)
-        println("Logged $metricKey: $metricValue in MLflow")
+        logger.info("Logged $metricKey: $metricValue in MLflow")
     }
 
     if (paramKey != null && paramValue != null) {
         client.logParam(runID, paramKey, paramValue)
-        println("Logged $paramKey: $paramValue in MLflow")
+        logger.info("Logged $paramKey: $paramValue in MLflow")
     }
 
     if (tagKey != null && tagValue != null) {
         client.setTag(runID, tagKey, tagValue)
-        println("Logged $tagKey: $tagValue in MLflow")
+        logger.info("Logged $tagKey: $tagValue in MLflow")
     }
 }
 
@@ -45,11 +48,11 @@ fun logMlflowInformation(
 fun getMlflowClient() : Pair<MlflowClient, Boolean> {
     return try {
         val client = MlflowContext(MLFLOW_TRACKING_URI).client
-        println("MLflow tracking URI is set to $MLFLOW_TRACKING_URI")
+        logger.info("MLflow tracking URI is set to $MLFLOW_TRACKING_URI")
         val isMlflowServerRunning = isMlflowServerRunning(MLFLOW_TRACKING_URI)
         Pair(client, isMlflowServerRunning)
     } catch (e: IllegalArgumentException) {
-        println("MLflow tracking URI is not set. Using local host.")
+        logger.info("MLflow tracking URI is not set. Using local host.")
         val localHost = "http://127.0.0.1:5000"
         val isMlflowServerRunning = isMlflowServerRunning(localHost)
         Pair(MlflowContext(localHost).client, isMlflowServerRunning)
@@ -72,10 +75,10 @@ fun getOrCreateMlflowExperiment(
 
     try {
         experimentID = mlflowClient.getExperimentByName(name).get().experimentId
-        println("Experiment '$name' was found")
+        logger.info("Experiment '$name' was found")
     } catch (e: NoSuchElementException) {
         experimentID = mlflowClient.createExperiment(name)
-        println("New experiment '$name' created")
+        logger.info("New experiment '$name' created")
     }
 
     val runInfo = mlflowClient.createRun(experimentID)
@@ -87,14 +90,14 @@ fun getOrCreateMlflowExperiment(
  */
 fun startMlflowServer() {
     val os = System.getProperty("os.name").lowercase()
-    println("Starting MLflow Tracking server...")
+    logger.info("Starting MLflow Tracking server...")
     if (os.contains("linux") or os.contains("mac")) {
-        println("Using operating system: $os")
+        logger.info("Using operating system: $os")
         "mlflow server".runCommand()
-        println("MLflow Tracking server is running")
+        logger.info("MLflow Tracking server is running")
     } else if (os.contains("windows")) {
-        println("Using operating system: $os")
+        logger.info("Using operating system: $os")
         Runtime.getRuntime().exec("mlflow server").waitFor(25, TimeUnit.SECONDS)
-        println("MLflow Tracking server is running")
+        logger.info("MLflow Tracking server is running")
     }
 }
