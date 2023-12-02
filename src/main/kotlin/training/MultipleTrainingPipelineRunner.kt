@@ -1,8 +1,9 @@
 package training
 
+import kotlin.concurrent.thread
 
-fun multipleTrainingPipelineRunner(algorithms: List<String>) {
-    for (algorithm in algorithms) {
-        trainingPipelineRunner(algorithm = algorithm)
-    }
+
+fun multipleTrainingPipelineRunner(algorithmsList: List<String>) {
+    val threads = algorithmsList.map { algorithm -> thread { trainingPipelineRunner(algorithm = algorithm) } }
+    threads.forEach { it.join() }
 }
