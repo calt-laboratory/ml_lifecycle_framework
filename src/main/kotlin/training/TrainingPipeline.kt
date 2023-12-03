@@ -387,7 +387,7 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         }
         // Log training result in MLflow
         val metricsForMlflow = mapOf(
-            "accuracy" to accuracy,
+            "accuracy" to round(value = accuracy, places = 4),
             )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
         val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(

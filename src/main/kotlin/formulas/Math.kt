@@ -7,6 +7,6 @@ package formulas
  * @param places The number of decimal places
  * @return The rounded value
  */
-fun round(value: Double, places: Int) : Double {
+fun round(value: Double?, places: Int) : Double {
     return "%.${places}f".format(java.util.Locale.US, value).toDouble()
 }
