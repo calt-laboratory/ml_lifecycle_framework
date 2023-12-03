@@ -385,5 +385,24 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
                 accuracy = round(value = nonNullAccuracy, places = 4)
             )
         }
+        // Log training result in MLflow
+        val metricsForMlflow = mapOf(
+            "accuracy" to accuracy,
+            )
+        val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
+        val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
+            name = MLFLOW_EXPERIMENT_NAME,
+            mlflowClient = mlflowClient,
+            isMlflowServerRunning = isMlflowServerRunning,
+        )
+        logMlflowInformation(
+            client = mlflowClientForExperiment,
+            runID = runID,
+            metrics = metricsForMlflow,
+            paramKey = "algorithm",
+            paramValue = cfg.train.algorithm,
+            tagKey = "dataset",
+            tagValue = "breast_cancer",
+        )
     }
 }

@@ -15,26 +15,28 @@ import java.util.concurrent.TimeUnit
 fun logMlflowInformation(
     client: MlflowClient,
     runID: String?,
-    metrics: Map<String, Double>,
+    metrics: Map<String, Double?>,
     paramKey: String?,
     paramValue: String?,
     tagKey: String?,
     tagValue: String?,
     ) {
 
-    for ((key, value) in metrics) {
-        client.logMetric(runID, key, value)
-        logger.info("Logged '$key: $value' in MLflow")
+    metrics.forEach { (key, value) ->
+        if (value != null) {
+            client.logMetric(runID, key, value)
+            logger.info("Logged '$key: $value' in MLflow")
+        }
     }
 
     if (paramKey != null && paramValue != null) {
         client.logParam(runID, paramKey, paramValue)
-        logger.info("Logged $paramKey: $paramValue in MLflow")
+        logger.info("Logged '$paramKey: $paramValue' in MLflow")
     }
 
     if (tagKey != null && tagValue != null) {
         client.setTag(runID, tagKey, tagValue)
-        logger.info("Logged $tagKey: $tagValue in MLflow")
+        logger.info("Logged '$tagKey: $tagValue' in MLflow")
     }
 }
 

@@ -48,8 +48,7 @@ class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
     }
 
     override fun predict(testDF: smile.data.DataFrame): IntArray {
-        val predictions = model.predict(testDF)
-        return predictions
+        return model.predict(testDF)
     }
 }
 
@@ -74,9 +73,8 @@ class RandomForestClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             )
     }
 
-    override fun predict(testDF: smile.data.DataFrame) : IntArray {
-        val predictions = model.predict(testDF)
-        return predictions
+    override fun predict(testDF: smile.data.DataFrame): IntArray {
+        return model.predict(testDF)
     }
 }
 
@@ -96,10 +94,9 @@ class AdaBoostClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             )
     }
 
-    override fun predict(testDF: smile.data.DataFrame) : IntArray {
+    override fun predict(testDF: smile.data.DataFrame): IntArray {
         val model = requireNotNull(model) { "Model is not fitted yet." }
-        val predictions = model.predict(testDF)
-        return predictions
+        return model.predict(testDF)
     }
 }
 
@@ -121,10 +118,9 @@ class GradientBoostingClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             )
     }
 
-    override fun predict(testDF: smile.data.DataFrame) : IntArray {
+    override fun predict(testDF: smile.data.DataFrame): IntArray {
         val model = requireNotNull(model) { "Model is not fitted yet." }
-        val predictions = model.predict(testDF)
-        return predictions
+        return model.predict(testDF)
     }
 }
 
@@ -143,10 +139,9 @@ class LogisticRegressionModel(private val cfg: Config) {
         )
     }
 
-    fun predict(xTest: Array<DoubleArray>) : IntArray {
+    fun predict(xTest: Array<DoubleArray>): IntArray {
         val model = requireNotNull(model) { "Model is not fitted yet." }
-        val predictions = model.predict(xTest)
-        return predictions
+        return model.predict(xTest)
     }
 }
 
@@ -179,7 +174,7 @@ class DeepLearningClassifier(private val cfg: Config) {
                 )
             return it.evaluate(
                 dataset = testData,
-                batchSize = cfg.train.deepLearningClassifier.testBatchSize
+                batchSize = cfg.train.deepLearningClassifier.testBatchSize,
             ).metrics[Metrics.ACCURACY]
         }
     }
