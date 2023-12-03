@@ -10,22 +10,21 @@ import java.util.concurrent.TimeUnit
 
 
 /**
- * Logs a metric, a parameter and a tag to MLflow.
+ * Logs metrics, a parameter and a tag to MLflow.
  */
 fun logMlflowInformation(
     client: MlflowClient,
     runID: String?,
-    metricKey: String?,
-    metricValue: Double?,
+    metrics: Map<String, Double>,
     paramKey: String?,
     paramValue: String?,
     tagKey: String?,
     tagValue: String?,
     ) {
 
-    if (metricKey != null && metricValue != null) {
-        client.logMetric(runID, metricKey, metricValue)
-        logger.info("Logged $metricKey: $metricValue in MLflow")
+    for ((key, value) in metrics) {
+        client.logMetric(runID, key, value)
+        logger.info("Logged '$key: $value' in MLflow")
     }
 
     if (paramKey != null && paramValue != null) {

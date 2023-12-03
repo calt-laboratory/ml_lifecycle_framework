@@ -12,6 +12,7 @@ data class TrainConfig(
     val algorithm: String,
     val multipleAlgorithms: List<String>,
     val decisionTree: DecisionTreeConfig,
+    val decisionTreeGridSearch: DecisionTreeGridSearchConfig,
     val randomForest: RandomForestConfig,
     val adaBoost: AdaBoostConfig,
     val gradientBoosting: GradientBoostingConfig,
@@ -25,6 +26,14 @@ data class DecisionTreeConfig(
     val maxDepth: Int,
     val maxNodes: Int,
     val nodeSize: Int,
+)
+
+@Serializable
+data class DecisionTreeGridSearchConfig(
+    val splitRule: List<SplitRule>,
+    val maxDepth: List<Int>,
+    val maxNodes: List<Int>,
+    val nodeSize: List<Int>,
 )
 
 @Serializable

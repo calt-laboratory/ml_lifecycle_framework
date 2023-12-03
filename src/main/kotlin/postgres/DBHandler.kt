@@ -28,7 +28,7 @@ fun connectToDB (dbURL: String) {
 }
 
 /**
- * Creates InIdTable in a database.
+ * Creates IntIdTable in a database.
  * @param table The table to create
  */
 fun createTable (table: IntIdTable) {

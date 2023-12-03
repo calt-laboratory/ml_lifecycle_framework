@@ -5,6 +5,13 @@ import constants.PATH_TO_YAML_CONFIG
 import logging.ProjectLogger.logger
 import kotlin.time.measureTime
 
+
+fun executePipeline(pipeline: TrainingPipeline) {
+    val duration = measureTime { pipeline.execute() }
+    logger.info("${pipeline::class.simpleName} duration: ${duration.inWholeSeconds} seconds")
+}
+
+
 /**
  * Provides various training pipelines (e.g. for ensemble classifiers or logistic regression).
  */
@@ -22,10 +29,4 @@ fun trainingPipelineRunner(algorithm: String) {
     } else {
         logger.info("No valid algorithm specified in config file")
     }
-}
-
-
-fun executePipeline(pipeline: TrainingPipeline) {
-    val duration = measureTime { pipeline.execute() }
-    logger.info("${pipeline::class.simpleName} duration: ${duration.inWholeSeconds} seconds")
 }

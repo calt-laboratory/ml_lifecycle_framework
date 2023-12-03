@@ -28,7 +28,7 @@ import dataProcessing.trainTestSplitForKotlinDL
 import dataProcessing.trainTestSplitForSmile
 import datatypeHandling.to2DDoubleArray
 import datatypeHandling.toIntArray
-import formulas.calculateAccuracy
+import formulas.accuracy
 import formulas.f1Score
 import formulas.precision
 import formulas.recall
@@ -138,14 +138,12 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
                 logger.info("Random Forest training started")
             }
             "adaBoost" -> {
-//            logger.info("AdaBoost training started.")
                 val model = AdaBoostClassifier(cfg = cfg)
                 model.fit(trainDF = preProcessedTrainData)
                 predictions = model.predict(testDF = preProcessedTestData)
                 logger.info("AdaBoost training started")
             }
             "gradientBoosting" -> {
-//            logger.info("Gradient Boosting training started.")
                 val model = GradientBoostingClassifier(cfg = cfg)
                 model.fit(trainDF = preProcessedTrainData)
                 predictions = model.predict(testDF = preProcessedTestData)
@@ -153,8 +151,8 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             }
         }
 
-        val acc = calculateAccuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
-        logger.info("Accuracy: $acc")
+        val accuracy = accuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
+        logger.info("Accuracy: $accuracy")
 
         val precision = precision(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
         logger.info("Precision: $precision")
@@ -168,9 +166,15 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         // Store training results in Postgres DB
         connectToDB(dbURL = TRAINING_RESULT_DB_URL)
         createTable(table = TrainingResults)
-        insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = acc)
+        insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy)
 
         // Log MLflow infos
+        val metricsForMlflow = mapOf(
+            "accuracy" to accuracy,
+            "precision" to precision,
+            "recall" to recall,
+            "f1Score" to f1Score,
+            )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
         val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
@@ -180,8 +184,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         logMlflowInformation(
             client = mlflowClientForExperiment,
             runID = runID,
-            metricKey = "accuracy",
-            metricValue = acc,
+            metrics = metricsForMlflow,
             paramKey = "algorithm",
             paramValue = cfg.train.algorithm,
             tagKey = "dataset",
@@ -267,7 +270,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         logger.info("Logistic Regression training started")
 
         // Calculate accuracy of y-predictions compared to y-test set
-        val accuracy = calculateAccuracy(yTrue = yTestIntArray, yPred = predictions)
+        val accuracy = accuracy(yTrue = yTestIntArray, yPred = predictions)
         logger.info("Accuracy: $accuracy")
 
         val precision = precision(yTrue = yTestIntArray, yPred = predictions)

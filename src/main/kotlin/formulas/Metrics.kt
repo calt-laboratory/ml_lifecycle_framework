@@ -7,7 +7,7 @@ package formulas
  * @param yPred: Predicted values of y-test set
  * @return accuracy: Accuracy of a model
  */
-fun calculateAccuracy(yTrue: IntArray, yPred: IntArray) : Double {
+fun accuracy(yTrue: IntArray, yPred: IntArray) : Double {
     require(value = yTrue.size == yPred.size) { "Arrays must have the same size" }
     val accuracy = yTrue.zip(yPred).count { (a, b) -> a == b }.toDouble() / yTrue.size
     return round(value = accuracy, places = 4)

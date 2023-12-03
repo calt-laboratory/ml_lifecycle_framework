@@ -1,7 +1,7 @@
 train:
   runner: "trainingPipelineRunner" # "multipleTrainingPipelineRunner", "trainingPipelineRunner"
 
-  algorithm: "decisionTree"
+  algorithm: "randomForest"
   # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
 
   multipleAlgorithms: ["decisionTree", "randomForest", "adaBoost"]
