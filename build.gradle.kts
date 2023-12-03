@@ -54,5 +54,6 @@ dependencies {
         exclude(group = "org.apache.logging.log4j")
     }
     implementation("ch.qos.logback:logback-classic:1.4.13")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     testImplementation(kotlin("test"))
 }
