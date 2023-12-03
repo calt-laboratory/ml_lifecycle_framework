@@ -1,6 +1,5 @@
 train:
-
-  runner: "multipleTrainingPipelineRunner" # "multipleTrainingPipelineRunner", "trainingPipelineRunner"
+  runner: "trainingPipelineRunner" # "multipleTrainingPipelineRunner", "trainingPipelineRunner"
 
   algorithm: "decisionTree"
   # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
@@ -12,6 +11,12 @@ train:
     maxDepth: 20
     maxNodes: 0
     nodeSize: 5
+
+  decisionTreeGridSearch:
+    splitRule: [GINI, ENTROPY]
+    maxDepth: [10, 20]
+    maxNodes: [0, 10]
+    nodeSize: [5, 10]
 
   randomForest:
     nTrees: 500
