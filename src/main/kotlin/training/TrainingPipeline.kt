@@ -168,7 +168,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         createTable(table = TrainingResults)
         insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy)
 
-        // Log MLflow infos
+        // Log training result in MLflow
         val metricsForMlflow = mapOf(
             "accuracy" to accuracy,
             "precision" to precision,
@@ -190,7 +190,6 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
-
     }
 }
 
@@ -286,8 +285,30 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         connectToDB(dbURL = TRAINING_RESULT_DB_URL)
         createTable(table = TrainingResults)
         insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy)
-    }
 
+        // Log training result in MLflow
+        val metricsForMlflow = mapOf(
+            "accuracy" to accuracy,
+            "precision" to precision,
+            "recall" to recall,
+            "f1Score" to f1Score,
+            )
+        val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
+        val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
+            name = MLFLOW_EXPERIMENT_NAME,
+            mlflowClient = mlflowClient,
+            isMlflowServerRunning = isMlflowServerRunning,
+        )
+        logMlflowInformation(
+            client = mlflowClientForExperiment,
+            runID = runID,
+            metrics = metricsForMlflow,
+            paramKey = "algorithm",
+            paramValue = cfg.train.algorithm,
+            tagKey = "dataset",
+            tagValue = "breast_cancer",
+        )
+    }
 }
 
 
