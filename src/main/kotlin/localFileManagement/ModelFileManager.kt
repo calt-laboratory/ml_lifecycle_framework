@@ -7,6 +7,7 @@ import org.jetbrains.kotlinx.dl.api.core.Sequential
 import org.jetbrains.kotlinx.dl.api.core.WritingMode
 import java.io.File
 
+
 fun saveDLClassifierModel(model: Sequential) {
     val resultFolderName = createTimeStamp() + "_deepLearningClassifier/"
     val pathToResults = File(PATH_TO_TRAINED_MODELS + resultFolderName)

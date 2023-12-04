@@ -12,6 +12,7 @@ import constants.PATH_TO_PREPROCESSED_TEST_DATASET
 import constants.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import constants.PATH_TO_PREPROCESSED_X_DATA
 import constants.PATH_TO_PREPROCESSED_Y_DATA
+import constants.PATH_TO_TRAINED_MODELS
 import constants.PREPROCESSED_FILE_NAME
 import constants.PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME
 import constants.PREPROCESSED_TEST_DATASET_FILE_NAME
@@ -36,6 +37,7 @@ import formulas.round
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import localFileManagement.deleteFolder
 import localFileManagement.readCSVAsKotlinDF
 import localFileManagement.readCSVAsKotlinDFAsync
 import localFileManagement.readCSVAsSmileDFAsync
@@ -372,6 +374,8 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         val (dlModel, accuracy) = deepLearningClassifier.fitAndPredict(trainData = train, testData = test)
         logger.info("Deep Learning training started")
 
+        // Delete folder if older than > 2 days
+        deleteFolder(folderPath = File(PATH_TO_TRAINED_MODELS))
         // Save the model results
         saveDLClassifierModel(model = dlModel)
 
