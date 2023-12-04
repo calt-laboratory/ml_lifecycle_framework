@@ -12,7 +12,6 @@ import constants.PATH_TO_PREPROCESSED_TEST_DATASET
 import constants.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import constants.PATH_TO_PREPROCESSED_X_DATA
 import constants.PATH_TO_PREPROCESSED_Y_DATA
-import constants.PATH_TO_TRAINED_MODELS
 import constants.PREPROCESSED_FILE_NAME
 import constants.PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME
 import constants.PREPROCESSED_TEST_DATASET_FILE_NAME
@@ -29,7 +28,6 @@ import dataProcessing.trainTestSplitForKotlinDL
 import dataProcessing.trainTestSplitForSmile
 import datatypeHandling.to2DDoubleArray
 import datatypeHandling.toIntArray
-import datetime.createTimeStamp
 import formulas.accuracy
 import formulas.f1Score
 import formulas.precision
@@ -41,14 +39,13 @@ import kotlinx.coroutines.runBlocking
 import localFileManagement.readCSVAsKotlinDF
 import localFileManagement.readCSVAsKotlinDFAsync
 import localFileManagement.readCSVAsSmileDFAsync
+import localFileManagement.saveDLClassifierModel
 import localFileManagement.storeKotlinDFAsCSVAsync
 import logging.ProjectLogger.logger
 import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
-import org.jetbrains.kotlinx.dl.api.core.SavingFormat
-import org.jetbrains.kotlinx.dl.api.core.WritingMode
 import postgres.TrainingResults
 import postgres.connectToDB
 import postgres.createTable
@@ -376,14 +373,7 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         logger.info("Deep Learning training started")
 
         // Save the model results
-        val resultFolderName = createTimeStamp() + "_" + cfg.train.algorithm + "/"
-        println("resultFolderName: $resultFolderName")
-        val pathToResults = File(PATH_TO_TRAINED_MODELS + resultFolderName)
-        dlModel.save(
-            modelDirectory = pathToResults,
-            savingFormat = SavingFormat.TF_GRAPH_CUSTOM_VARIABLES,
-            writingMode = WritingMode.OVERRIDE,
-            )
+        saveDLClassifierModel(model = dlModel)
 
         accuracy?.let { nonNullAccuracy ->
             logger.info("Accuracy: ${round(value = nonNullAccuracy, places = 4)}")
