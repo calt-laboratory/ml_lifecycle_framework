@@ -12,6 +12,7 @@ import constants.PATH_TO_PREPROCESSED_TEST_DATASET
 import constants.PATH_TO_PREPROCESSED_TRAIN_DATASET
 import constants.PATH_TO_PREPROCESSED_X_DATA
 import constants.PATH_TO_PREPROCESSED_Y_DATA
+import constants.PATH_TO_TRAINED_MODELS
 import constants.PREPROCESSED_FILE_NAME
 import constants.PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME
 import constants.PREPROCESSED_TEST_DATASET_FILE_NAME
@@ -28,6 +29,7 @@ import dataProcessing.trainTestSplitForKotlinDL
 import dataProcessing.trainTestSplitForSmile
 import datatypeHandling.to2DDoubleArray
 import datatypeHandling.toIntArray
+import datetime.createTimeStamp
 import formulas.accuracy
 import formulas.f1Score
 import formulas.precision
@@ -45,6 +47,8 @@ import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import org.jetbrains.kotlinx.dl.api.core.SavingFormat
+import org.jetbrains.kotlinx.dl.api.core.WritingMode
 import postgres.TrainingResults
 import postgres.connectToDB
 import postgres.createTable
@@ -129,7 +133,6 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
                 model.fit(trainDF = preProcessedTrainData)
                 predictions = model.predict(testDF = preProcessedTestData)
                 logger.info("Decision Tree training started")
-
             }
             "randomForest" -> {
                 val model = RandomForestClassifier(cfg = cfg)
@@ -369,8 +372,18 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         )
 
         val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
-        val accuracy = deepLearningClassifier.fitAndPredict(trainData = train, testData = test)
+        val (dlModel, accuracy) = deepLearningClassifier.fitAndPredict(trainData = train, testData = test)
         logger.info("Deep Learning training started")
+
+        // Save the model results
+        val resultFolderName = createTimeStamp() + "_" + cfg.train.algorithm + "/"
+        println("resultFolderName: $resultFolderName")
+        val pathToResults = File(PATH_TO_TRAINED_MODELS + resultFolderName)
+        dlModel.save(
+            modelDirectory = pathToResults,
+            savingFormat = SavingFormat.TF_GRAPH_CUSTOM_VARIABLES,
+            writingMode = WritingMode.OVERRIDE,
+            )
 
         accuracy?.let { nonNullAccuracy ->
             logger.info("Accuracy: ${round(value = nonNullAccuracy, places = 4)}")

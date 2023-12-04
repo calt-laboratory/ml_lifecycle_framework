@@ -25,3 +25,5 @@ const val PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA = "src/main/resources/preproces
 const val PATH_TO_YAML_CONFIG = "src/main/kotlin/config/config.yml"
 
 const val LOG_DIR = "src/main/logs"
+
+const val PATH_TO_TRAINED_MODELS = "src/main/resources/results/"

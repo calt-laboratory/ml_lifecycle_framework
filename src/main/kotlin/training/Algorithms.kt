@@ -11,7 +11,6 @@ import org.jetbrains.kotlinx.dl.api.core.loss.Losses
 import org.jetbrains.kotlinx.dl.api.core.metric.Metrics
 import org.jetbrains.kotlinx.dl.api.core.optimizer.SGD
 import org.jetbrains.kotlinx.dl.dataset.OnHeapDataset
-import org.jetbrains.kotlinx.dl.impl.summary.logSummary
 import smile.classification.AdaBoost
 import smile.classification.DecisionTree
 import smile.classification.GradientTreeBoost
@@ -163,19 +162,18 @@ class DeepLearningClassifier(private val cfg: Config) {
             ),
     )
 
-    fun fitAndPredict(trainData: OnHeapDataset, testData: OnHeapDataset) : Double? {
-        model.use {
-            it.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
-            it.logSummary()
-            it.fit(
-                dataset = trainData,
-                epochs = cfg.train.deepLearningClassifier.epochs,
-                batchSize = cfg.train.deepLearningClassifier.trainBatchSize,
-                )
-            return it.evaluate(
-                dataset = testData,
-                batchSize = cfg.train.deepLearningClassifier.testBatchSize,
-            ).metrics[Metrics.ACCURACY]
-        }
+    fun fitAndPredict(trainData: OnHeapDataset, testData: OnHeapDataset) : Pair<Sequential, Double?> {
+
+        model.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
+        model.fit(
+            dataset = trainData,
+            epochs = cfg.train.deepLearningClassifier.epochs,
+            batchSize = cfg.train.deepLearningClassifier.trainBatchSize,
+        )
+        val accuracy = model.evaluate(
+            dataset = testData,
+            batchSize = cfg.train.deepLearningClassifier.testBatchSize,
+        ).metrics[Metrics.ACCURACY]
+        return Pair(model, accuracy)
     }
 }
