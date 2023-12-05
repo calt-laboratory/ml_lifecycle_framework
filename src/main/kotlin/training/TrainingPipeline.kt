@@ -129,8 +129,8 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         val preProcessedYTestData = async { readCSVAsKotlinDFAsync(PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA) }.await()
 
         val model = when (algorithm) {
-            Algorithm.DECISION_TREE -> DecisionTreeClassifier(cfg = cfg.train.decisionTree)
-            Algorithm.RANDOM_FOREST -> RandomForestClassifier(cfg = cfg)
+            Algorithm.DECISION_TREE -> DecisionTreeClassifier(decisionTreeConfig = cfg.train.decisionTree)
+            Algorithm.RANDOM_FOREST -> RandomForestClassifier(randomForestConfig = cfg.train.randomForest)
             Algorithm.ADA_BOOST -> AdaBoostClassifier(cfg = cfg)
             Algorithm.GRADIENT_BOOSTING -> GradientBoostingClassifier(cfg = cfg)
 

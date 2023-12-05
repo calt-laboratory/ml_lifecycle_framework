@@ -2,6 +2,7 @@ package training
 
 import config.Config
 import config.DecisionTreeConfig
+import config.RandomForestConfig
 import org.jetbrains.kotlinx.dl.api.core.Sequential
 import org.jetbrains.kotlinx.dl.api.core.activation.Activations
 import org.jetbrains.kotlinx.dl.api.core.initializer.HeNormal
@@ -33,7 +34,7 @@ abstract class EnsembleClassifier {
 
 
 class DecisionTreeClassifier(
-    private val cfg: DecisionTreeConfig,
+    private val decisionTreeConfig: DecisionTreeConfig,
 ) : EnsembleClassifier() {
 
     private lateinit var model: DecisionTree
@@ -42,10 +43,10 @@ class DecisionTreeClassifier(
         model = cart(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            splitRule = cfg.splitRule,
-            maxDepth = cfg.maxDepth,
-            maxNodes = cfg.maxNodes,
-            nodeSize = cfg.nodeSize,
+            splitRule = decisionTreeConfig.splitRule,
+            maxDepth = decisionTreeConfig.maxDepth,
+            maxNodes = decisionTreeConfig.maxNodes,
+            nodeSize = decisionTreeConfig.nodeSize,
         )
     }
 
@@ -55,7 +56,7 @@ class DecisionTreeClassifier(
 }
 
 
-class RandomForestClassifier(private val cfg: Config) : EnsembleClassifier() {
+class RandomForestClassifier(private val randomForestConfig: RandomForestConfig) : EnsembleClassifier() {
 
     private lateinit var model: RandomForest
 
@@ -63,15 +64,15 @@ class RandomForestClassifier(private val cfg: Config) : EnsembleClassifier() {
         model = randomForest(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            ntrees = cfg.train.randomForest.nTrees,
-            mtry = cfg.train.randomForest.mtry,
-            splitRule = cfg.train.randomForest.splitRule,
-            maxDepth = cfg.train.randomForest.maxDepth,
-            maxNodes = cfg.train.randomForest.maxNodes,
-            nodeSize = cfg.train.randomForest.nodeSize,
-            subsample = cfg.train.randomForest.subsample,
-            classWeight = cfg.train.randomForest.classWeight,
-            seeds = cfg.train.randomForest.seeds,
+            ntrees = randomForestConfig.nTrees,
+            mtry = randomForestConfig.mtry,
+            splitRule = randomForestConfig.splitRule,
+            maxDepth = randomForestConfig.maxDepth,
+            maxNodes = randomForestConfig.maxNodes,
+            nodeSize = randomForestConfig.nodeSize,
+            subsample = randomForestConfig.subsample,
+            classWeight = randomForestConfig.classWeight,
+            seeds = randomForestConfig.seeds,
         )
     }
 

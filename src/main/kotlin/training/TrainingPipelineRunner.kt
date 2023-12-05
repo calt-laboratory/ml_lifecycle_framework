@@ -10,6 +10,8 @@ import config.ensembleAlgorithms
  */
 fun trainingPipelineRunner(cfg: Config) {
 
+    // TODO: Parallelize training pipelines
+
     for (algorithm in cfg.train.algorithms) {
         when (algorithm) {
             in ensembleAlgorithms -> EnsembleTrainingPipeline(cfg = cfg, algorithm = algorithm)

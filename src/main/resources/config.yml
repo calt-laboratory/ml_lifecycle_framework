@@ -1,5 +1,5 @@
 train:
-  algorithms: ["decisionTree", "gradientBoosting"]
+  algorithms: ["decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"]
   # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
 
   decisionTree:
