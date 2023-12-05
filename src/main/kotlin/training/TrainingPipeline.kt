@@ -131,16 +131,13 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         val model = when (algorithm) {
             Algorithm.DECISION_TREE -> DecisionTreeClassifier(decisionTreeConfig = cfg.train.decisionTree)
             Algorithm.RANDOM_FOREST -> RandomForestClassifier(randomForestConfig = cfg.train.randomForest)
-            Algorithm.ADA_BOOST -> AdaBoostClassifier(cfg = cfg)
-            Algorithm.GRADIENT_BOOSTING -> GradientBoostingClassifier(cfg = cfg)
+            Algorithm.ADA_BOOST -> AdaBoostClassifier(adaBoostConfig = cfg.train.adaBoost)
+            Algorithm.GRADIENT_BOOSTING -> GradientBoostingClassifier(gradientBoostingConfig = cfg.train.gradientBoosting)
 
             else -> throw IllegalArgumentException("Invalid algorithm for ensemble training pipeline")
         }
-
         logger.info("$algorithm training started")
-
         model.fit(trainDF = preProcessedTrainData)
-
         val predictions = model.predict(testDF = preProcessedTestData)
 
         val accuracy = accuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)

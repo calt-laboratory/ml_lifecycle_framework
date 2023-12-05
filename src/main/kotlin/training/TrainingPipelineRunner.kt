@@ -4,9 +4,10 @@ import config.Algorithm
 import config.Config
 import config.ensembleAlgorithms
 
+
 /**
  * Runs one or more training pipelines based on the algorithms list specified in the config file.
- * @param cfg
+ * @param cfg Configurations
  */
 fun trainingPipelineRunner(cfg: Config) {
 

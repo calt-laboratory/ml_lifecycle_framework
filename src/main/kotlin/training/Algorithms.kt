@@ -1,7 +1,9 @@
 package training
 
+import config.AdaBoostConfig
 import config.Config
 import config.DecisionTreeConfig
+import config.GradientBoostingConfig
 import config.RandomForestConfig
 import org.jetbrains.kotlinx.dl.api.core.Sequential
 import org.jetbrains.kotlinx.dl.api.core.activation.Activations
@@ -82,7 +84,7 @@ class RandomForestClassifier(private val randomForestConfig: RandomForestConfig)
 }
 
 
-class AdaBoostClassifier(private val cfg: Config) : EnsembleClassifier() {
+class AdaBoostClassifier(private val adaBoostConfig: AdaBoostConfig) : EnsembleClassifier() {
 
     private var model: AdaBoost? = null
 
@@ -90,10 +92,10 @@ class AdaBoostClassifier(private val cfg: Config) : EnsembleClassifier() {
         model = adaboost(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            ntrees = cfg.train.adaBoost.nTrees,
-            maxDepth = cfg.train.adaBoost.maxDepth,
-            maxNodes = cfg.train.adaBoost.maxNodes,
-            nodeSize = cfg.train.adaBoost.nodeSize,
+            ntrees = adaBoostConfig.nTrees,
+            maxDepth = adaBoostConfig.maxDepth,
+            maxNodes = adaBoostConfig.maxNodes,
+            nodeSize = adaBoostConfig.nodeSize,
         )
     }
 
@@ -104,7 +106,7 @@ class AdaBoostClassifier(private val cfg: Config) : EnsembleClassifier() {
 }
 
 
-class GradientBoostingClassifier(private val cfg: Config) : EnsembleClassifier() {
+class GradientBoostingClassifier(private val gradientBoostingConfig: GradientBoostingConfig) : EnsembleClassifier() {
 
     private var model: GradientTreeBoost? = null
 
@@ -112,12 +114,12 @@ class GradientBoostingClassifier(private val cfg: Config) : EnsembleClassifier()
         model = smile.classification.gbm(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            ntrees = cfg.train.gradientBoosting.nTrees,
-            maxDepth = cfg.train.gradientBoosting.maxDepth,
-            maxNodes = cfg.train.gradientBoosting.maxNodes,
-            nodeSize = cfg.train.gradientBoosting.nodeSize,
-            shrinkage = cfg.train.gradientBoosting.shrinkage,
-            subsample = cfg.train.gradientBoosting.subsample,
+            ntrees = gradientBoostingConfig.nTrees,
+            maxDepth = gradientBoostingConfig.maxDepth,
+            maxNodes = gradientBoostingConfig.maxNodes,
+            nodeSize = gradientBoostingConfig.nodeSize,
+            shrinkage = gradientBoostingConfig.shrinkage,
+            subsample = gradientBoostingConfig.subsample,
         )
     }
 
