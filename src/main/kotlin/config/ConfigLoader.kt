@@ -36,8 +36,6 @@ val ensembleAlgorithms = listOf(
 
 @Serializable
 data class TrainConfig(
-    val runner: String,
-    val algorithm: Algorithm,
     val algorithms: List<Algorithm>,
     val decisionTree: DecisionTreeConfig,
     val decisionTreeGridSearch: DecisionTreeGridSearchConfig,
@@ -128,7 +126,7 @@ data class Config(
     val preProcessingDL: PreProcessingDeepLearningConfig,
 ) {
     companion object {
-        const val PATH_TO_YAML_CONFIG = "config.yml"
+        private const val PATH_TO_YAML_CONFIG = "config.yml"
 
         fun fromYaml(path: String = PATH_TO_YAML_CONFIG): Config {
             val contents = object {}.javaClass.classLoader.getResource(path)?.readText()

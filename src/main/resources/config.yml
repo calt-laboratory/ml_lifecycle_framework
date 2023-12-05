@@ -1,10 +1,6 @@
 train:
-  runner: "trainingPipelineRunner" # "trainingPipelineRunner"
-
-  algorithm: "deepLearningClassifier"
+  algorithms: ["decisionTree", "gradientBoosting"]
   # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
-
-  algorithms: ["decisionTree", "randomForest", "adaBoost"]
 
   decisionTree:
     splitRule: GINI

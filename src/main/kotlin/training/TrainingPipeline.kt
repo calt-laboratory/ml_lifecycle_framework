@@ -44,7 +44,6 @@ import localFileManagement.readCSVAsKotlinDFAsync
 import localFileManagement.readCSVAsSmileDFAsync
 import localFileManagement.saveDLClassifierModel
 import localFileManagement.storeKotlinDFAsCSVAsync
-import logging.ProjectLogger.logger
 import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
@@ -65,7 +64,7 @@ abstract class TrainingPipeline(val cfg: Config) {
 /**
  * Comprises all preprocessing steps and the training/prediction for an ensemble classifier.
  */
-class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
+class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : TrainingPipeline(cfg) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -129,7 +128,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         val preProcessedTestData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TEST_DATASET) }.await()
         val preProcessedYTestData = async { readCSVAsKotlinDFAsync(PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA) }.await()
 
-        val model = when (cfg.train.algorithm) {
+        val model = when (algorithm) {
             Algorithm.DECISION_TREE -> DecisionTreeClassifier(cfg = cfg.train.decisionTree)
             Algorithm.RANDOM_FOREST -> RandomForestClassifier(cfg = cfg)
             Algorithm.ADA_BOOST -> AdaBoostClassifier(cfg = cfg)
@@ -138,7 +137,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             else -> throw IllegalArgumentException("Invalid algorithm for ensemble training pipeline")
         }
 
-        logger.info("${cfg.train.algorithm} training started")
+        logger.info("$algorithm training started")
 
         model.fit(trainDF = preProcessedTrainData)
 
@@ -159,7 +158,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         // Store training results in Postgres DB
         connectToDB(dbURL = TRAINING_RESULT_DB_URL)
         createTable(table = TrainingResults)
-        insertTrainingResults(algorithmName = cfg.train.algorithm.toString(), accuracy = accuracy)
+        insertTrainingResults(algorithmName = algorithm.toString(), accuracy = accuracy)
 
         // Log training result in MLflow
         val metricsForMlflow = mapOf(
@@ -179,7 +178,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
-            paramValue = cfg.train.algorithm.toString(),
+            paramValue = algorithm.toString(),
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
@@ -187,7 +186,9 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
 }
 
 
-class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
+class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) : TrainingPipeline(cfg) {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun execute() = runBlocking {
         logger.info("Starting the Logistic Regression pipeline...")
@@ -277,7 +278,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         // Store training results in Postgres DB
         connectToDB(dbURL = TRAINING_RESULT_DB_URL)
         createTable(table = TrainingResults)
-        insertTrainingResults(algorithmName = cfg.train.algorithm.toString(), accuracy = accuracy)
+        insertTrainingResults(algorithmName = algorithm.toString(), accuracy = accuracy)
 
         // Log training result in MLflow
         val metricsForMlflow = mapOf(
@@ -297,7 +298,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
-            paramValue = cfg.train.algorithm.toString(),
+            paramValue = algorithm.toString(),
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
@@ -308,7 +309,9 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
 /**
  * Comprises all preprocessing steps and the training/prediction for a Deep Learning Classifier.
  */
-class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
+class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : TrainingPipeline(cfg) {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun execute(): Unit = runBlocking {
         logger.info("Starting the Deep Learning Classifier pipeline...")
@@ -378,7 +381,7 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         createTable(table = TrainingResults)
         accuracy?.let { nonNullAccuracy ->
             insertTrainingResults(
-                algorithmName = cfg.train.algorithm.toString(),
+                algorithmName = algorithm.toString(),
                 accuracy = round(value = nonNullAccuracy, places = 4)
             )
         }
@@ -397,7 +400,7 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
-            paramValue = cfg.train.algorithm.toString(),
+            paramValue = algorithm.toString(),
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
