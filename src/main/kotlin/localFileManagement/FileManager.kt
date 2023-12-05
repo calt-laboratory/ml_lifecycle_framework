@@ -92,7 +92,10 @@ suspend fun readCSVAsSmileDFAsync(path: String): smile.data.DataFrame {
  * @param folderPath: Path to the directory that contains the folders to be deleted
  */
 fun deleteFolder(folderPath: File) {
-    for(folder in folderPath.listFiles()) {
+
+    val folders = folderPath.listFiles() ?: emptyArray()
+
+    for(folder in folders) {
         val lastModified = Date(folder.lastModified())
         val currentDateMinus2Days = Date(System.currentTimeMillis() - 2 * 24 * 60 * 60 * 1000)
         if (currentDateMinus2Days > lastModified) {
