@@ -253,7 +253,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
         val yTestIntArray = yTest.toIntArray()
 
         // Train the model
-        val logisticRegression = LogisticRegressionModel(cfg = cfg)
+        val logisticRegression = LogisticRegression(logisticRegressionConfig = cfg.train.logisticRegression)
         logisticRegression.fit(xTrain = xTrainDoubleArray, yTrain = yTrainIntArray)
         // Calculate y-predictions based on the x-test set
         val predictions = logisticRegression.predict(xTest = xTestDoubleArray)
@@ -360,7 +360,7 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
             trainSize = cfg.preProcessingDL.trainSize
         )
 
-        val deepLearningClassifier = DeepLearningClassifier(cfg = cfg)
+        val deepLearningClassifier = DeepLearningClassifier(deepLearningClassifierConfig = cfg.train.deepLearningClassifier)
         val (dlModel, accuracy) = deepLearningClassifier.fitAndPredict(trainData = train, testData = test)
         logger.info("Deep Learning training started")
 

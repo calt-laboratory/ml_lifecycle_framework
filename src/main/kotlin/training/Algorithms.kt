@@ -1,9 +1,10 @@
 package training
 
 import config.AdaBoostConfig
-import config.Config
 import config.DecisionTreeConfig
+import config.DeepLearningClassifierConfig
 import config.GradientBoostingConfig
+import config.LogisticRegressionConfig
 import config.RandomForestConfig
 import org.jetbrains.kotlinx.dl.api.core.Sequential
 import org.jetbrains.kotlinx.dl.api.core.activation.Activations
@@ -130,7 +131,7 @@ class GradientBoostingClassifier(private val gradientBoostingConfig: GradientBoo
 }
 
 
-class LogisticRegressionModel(private val cfg: Config) {
+class LogisticRegression(private val logisticRegressionConfig: LogisticRegressionConfig) {
 
     private var model: LogisticRegression? = null
 
@@ -138,9 +139,9 @@ class LogisticRegressionModel(private val cfg: Config) {
         model = logit(
             x = xTrain,
             y = yTrain,
-            lambda = cfg.train.logisticRegression.lambda,
-            tol = cfg.train.logisticRegression.tol,
-            maxIter = cfg.train.logisticRegression.maxIter,
+            lambda = logisticRegressionConfig.lambda,
+            tol = logisticRegressionConfig.tol,
+            maxIter = logisticRegressionConfig.maxIter,
         )
     }
 
@@ -151,20 +152,20 @@ class LogisticRegressionModel(private val cfg: Config) {
 }
 
 
-class DeepLearningClassifier(private val cfg: Config) {
+class DeepLearningClassifier(private val deepLearningClassifierConfig: DeepLearningClassifierConfig) {
 
     private var model = Sequential.of(
         Input(30),
         Dense(
             outputSize = 300,
             activation = Activations.Relu,
-            kernelInitializer = HeNormal(cfg.train.deepLearningClassifier.kernelInitializerSeed),
+            kernelInitializer = HeNormal(deepLearningClassifierConfig.kernelInitializerSeed),
             biasInitializer = Zeros(),
         ),
         Dense(
             outputSize = 2,
             activation = Activations.Linear,
-            kernelInitializer = HeNormal(cfg.train.deepLearningClassifier.kernelInitializerSeed),
+            kernelInitializer = HeNormal(deepLearningClassifierConfig.kernelInitializerSeed),
             biasInitializer = Zeros(),
         ),
     )
@@ -174,12 +175,12 @@ class DeepLearningClassifier(private val cfg: Config) {
         model.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
         model.fit(
             dataset = trainData,
-            epochs = cfg.train.deepLearningClassifier.epochs,
-            batchSize = cfg.train.deepLearningClassifier.trainBatchSize,
+            epochs = deepLearningClassifierConfig.epochs,
+            batchSize = deepLearningClassifierConfig.trainBatchSize,
         )
         val accuracy = model.evaluate(
             dataset = testData,
-            batchSize = cfg.train.deepLearningClassifier.testBatchSize,
+            batchSize = deepLearningClassifierConfig.testBatchSize,
         ).metrics[Metrics.ACCURACY]
         return Pair(model, accuracy)
     }
