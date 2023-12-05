@@ -3,6 +3,7 @@ package training
 import azure.downloadFileFromBlob
 import azure.getBlobClientConnection
 import azure.uploadFileToBlob
+import config.Algorithm
 import config.Config
 import constants.MLFLOW_EXPERIMENT_NAME
 import constants.PATH_TO_DATASET
@@ -48,6 +49,7 @@ import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
+import org.slf4j.LoggerFactory
 import postgres.TrainingResults
 import postgres.connectToDB
 import postgres.createTable
@@ -55,7 +57,7 @@ import postgres.insertTrainingResults
 import java.io.File
 
 
-abstract class TrainingPipeline (val cfg: Config) {
+abstract class TrainingPipeline(val cfg: Config) {
     abstract fun execute()
 }
 
@@ -64,6 +66,9 @@ abstract class TrainingPipeline (val cfg: Config) {
  * Comprises all preprocessing steps and the training/prediction for an ensemble classifier.
  */
 class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     override fun execute() = runBlocking {
         logger.info("Starting ensemble training pipeline...")
         val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
@@ -124,34 +129,20 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         val preProcessedTestData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TEST_DATASET) }.await()
         val preProcessedYTestData = async { readCSVAsKotlinDFAsync(PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA) }.await()
 
-        var predictions = intArrayOf()
+        val model = when (cfg.train.algorithm) {
+            Algorithm.DECISION_TREE -> DecisionTreeClassifier(cfg = cfg.train.decisionTree)
+            Algorithm.RANDOM_FOREST -> RandomForestClassifier(cfg = cfg)
+            Algorithm.ADA_BOOST -> AdaBoostClassifier(cfg = cfg)
+            Algorithm.GRADIENT_BOOSTING -> GradientBoostingClassifier(cfg = cfg)
 
-        when(cfg.train.algorithm) {
-            "decisionTree" -> {
-                val model = DecisionTreeClassifier(cfg = cfg)
-                model.fit(trainDF = preProcessedTrainData)
-                predictions = model.predict(testDF = preProcessedTestData)
-                logger.info("Decision Tree training started")
-            }
-            "randomForest" -> {
-                val model = RandomForestClassifier(cfg = cfg)
-                model.fit(trainDF = preProcessedTrainData)
-                predictions = model.predict(testDF = preProcessedTestData)
-                logger.info("Random Forest training started")
-            }
-            "adaBoost" -> {
-                val model = AdaBoostClassifier(cfg = cfg)
-                model.fit(trainDF = preProcessedTrainData)
-                predictions = model.predict(testDF = preProcessedTestData)
-                logger.info("AdaBoost training started")
-            }
-            "gradientBoosting" -> {
-                val model = GradientBoostingClassifier(cfg = cfg)
-                model.fit(trainDF = preProcessedTrainData)
-                predictions = model.predict(testDF = preProcessedTestData)
-                logger.info("Gradient Boosting training started"   )
-            }
+            else -> throw IllegalArgumentException("Invalid algorithm for ensemble training pipeline")
         }
+
+        logger.info("${cfg.train.algorithm} training started")
+
+        model.fit(trainDF = preProcessedTrainData)
+
+        val predictions = model.predict(testDF = preProcessedTestData)
 
         val accuracy = accuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
         logger.info("Accuracy: $accuracy")
@@ -168,7 +159,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         // Store training results in Postgres DB
         connectToDB(dbURL = TRAINING_RESULT_DB_URL)
         createTable(table = TrainingResults)
-        insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy)
+        insertTrainingResults(algorithmName = cfg.train.algorithm.toString(), accuracy = accuracy)
 
         // Log training result in MLflow
         val metricsForMlflow = mapOf(
@@ -176,7 +167,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             "precision" to precision,
             "recall" to recall,
             "f1Score" to f1Score,
-            )
+        )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
         val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
@@ -188,7 +179,7 @@ class EnsembleTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
-            paramValue = cfg.train.algorithm,
+            paramValue = cfg.train.algorithm.toString(),
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
@@ -286,7 +277,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         // Store training results in Postgres DB
         connectToDB(dbURL = TRAINING_RESULT_DB_URL)
         createTable(table = TrainingResults)
-        insertTrainingResults(algorithmName = cfg.train.algorithm, accuracy = accuracy)
+        insertTrainingResults(algorithmName = cfg.train.algorithm.toString(), accuracy = accuracy)
 
         // Log training result in MLflow
         val metricsForMlflow = mapOf(
@@ -294,7 +285,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             "precision" to precision,
             "recall" to recall,
             "f1Score" to f1Score,
-            )
+        )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
         val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
@@ -306,13 +297,12 @@ class LogisticRegressionTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
-            paramValue = cfg.train.algorithm,
+            paramValue = cfg.train.algorithm.toString(),
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
     }
 }
-
 
 
 /**
@@ -388,14 +378,14 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
         createTable(table = TrainingResults)
         accuracy?.let { nonNullAccuracy ->
             insertTrainingResults(
-                algorithmName = cfg.train.algorithm,
+                algorithmName = cfg.train.algorithm.toString(),
                 accuracy = round(value = nonNullAccuracy, places = 4)
             )
         }
         // Log training result in MLflow
         val metricsForMlflow = mapOf(
             "accuracy" to round(value = accuracy, places = 4),
-            )
+        )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
         val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
@@ -407,7 +397,7 @@ class DeepLearningTrainingPipeline(cfg: Config) : TrainingPipeline(cfg) {
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
-            paramValue = cfg.train.algorithm,
+            paramValue = cfg.train.algorithm.toString(),
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )

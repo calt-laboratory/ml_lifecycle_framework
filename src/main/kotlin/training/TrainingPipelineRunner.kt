@@ -1,32 +1,28 @@
 package training
 
-import config.readYamlConfig
-import constants.PATH_TO_YAML_CONFIG
+import config.Algorithm
+import config.Config
+import config.ensembleAlgorithms
 import logging.ProjectLogger.logger
 import kotlin.time.measureTime
-
-
-fun executePipeline(pipeline: TrainingPipeline) {
-    val duration = measureTime { pipeline.execute() }
-    logger.info("${pipeline::class.simpleName} duration: ${duration.inWholeSeconds} seconds")
-}
-
 
 /**
  * Provides various training pipelines (e.g. for ensemble classifiers or logistic regression).
  */
-fun trainingPipelineRunner(algorithm: String) {
-    val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
+fun trainingPipelineRunner(cfg: Config) {
+    // factory method
+    val pipeline = getPipeline(cfg = cfg)
 
-    // TODO: Replace if with when
+    val duration = measureTime { pipeline.execute() }
 
-    if (algorithm in listOf("decisionTree", "randomForest", "adaBoost", "gradientBoosting")) {
-        executePipeline(pipeline = EnsembleTrainingPipeline(cfg = cfg))
-    } else if (algorithm == "logisticRegression") {
-        executePipeline(pipeline = LogisticRegressionTrainingPipeline(cfg = cfg))
-    } else if (algorithm == "deepLearningClassifier") {
-        executePipeline(pipeline = DeepLearningTrainingPipeline(cfg = cfg))
-    } else {
-        logger.info("No valid algorithm specified in config file")
+    logger.info("${pipeline::class.simpleName} duration: ${duration.inWholeSeconds} seconds")
+}
+
+private fun getPipeline(cfg: Config): TrainingPipeline {
+    return when (cfg.train.algorithm) {
+        in ensembleAlgorithms -> EnsembleTrainingPipeline(cfg = cfg)
+        Algorithm.LOGISTIC_REGRESSION -> LogisticRegressionTrainingPipeline(cfg = cfg)
+        Algorithm.DEEP_LEARNING_CLASSIFIER -> DeepLearningTrainingPipeline(cfg = cfg)
+        else -> throw IllegalArgumentException("No valid algorithm specified in config file")
     }
 }

@@ -22,8 +22,6 @@ const val PATH_TO_PREPROCESSED_Y_DATA = "src/main/resources/preprocessed_dataset
 const val PATH_TO_PREPROCESSED_SMILE_X_TEST_DATA = "src/main/resources/preprocessed_datasets/x_smile_test_data_preprocessed_breast_cancer_classification.csv"
 const val PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA = "src/main/resources/preprocessed_datasets/y_smile_test_data_preprocessed_breast_cancer_classification.csv"
 
-const val PATH_TO_YAML_CONFIG = "src/main/kotlin/config/config.yml"
-
 const val LOG_DIR = "src/main/logs"
 
 const val PATH_TO_TRAINED_MODELS = "src/main/resources/results/"

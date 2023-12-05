@@ -1,28 +1,16 @@
 
-import config.readYamlConfig
-import constants.PATH_TO_YAML_CONFIG
-import logging.ProjectLogger.logger
-import training.multipleTrainingPipelineRunner
+import config.Config
 import training.trainingPipelineRunner
-import kotlin.time.measureTime
-
+import kotlin.concurrent.thread
 
 fun main() {
+    val cfg = Config.fromYaml()
 
-    val cfg = readYamlConfig(filePath = PATH_TO_YAML_CONFIG)
-
-    val singleRunner = RunnerType.TRAINING_PIPELINE_RUNNER
-    val multipleTrainingPipelineRunner = RunnerType.MULTIPLE_TRAINING_PIPELINE_RUNNER
-
-    if (cfg.train.runner == singleRunner.runnerName) {
-        trainingPipelineRunner(algorithm = cfg.train.algorithm)
-    } else if (cfg.train.runner == multipleTrainingPipelineRunner.runnerName) {
-        val duration = measureTime { multipleTrainingPipelineRunner(algorithmsList = cfg.train.multipleAlgorithms) }
-        logger.info("Multiple training pipeline duration: ${duration.inWholeSeconds} seconds")
+    val threads = cfg.train.algorithms.map { _ ->
+        thread {
+            trainingPipelineRunner(cfg = cfg)
+        }
     }
-}
 
-enum class RunnerType(val runnerName: String) {
-    TRAINING_PIPELINE_RUNNER("trainingPipelineRunner"),
-    MULTIPLE_TRAINING_PIPELINE_RUNNER("multipleTrainingPipelineRunner")
+    threads.forEach { it.join() }
 }

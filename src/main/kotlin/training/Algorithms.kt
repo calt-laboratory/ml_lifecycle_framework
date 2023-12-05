@@ -1,6 +1,7 @@
 package training
 
 import config.Config
+import config.DecisionTreeConfig
 import org.jetbrains.kotlinx.dl.api.core.Sequential
 import org.jetbrains.kotlinx.dl.api.core.activation.Activations
 import org.jetbrains.kotlinx.dl.api.core.initializer.HeNormal
@@ -23,7 +24,7 @@ import smile.classification.randomForest
 import smile.data.formula.Formula
 
 
-abstract class EnsembleClassifier(val cfg: Config) {
+abstract class EnsembleClassifier {
 
     abstract fun fit(trainDF: smile.data.DataFrame)
 
@@ -31,7 +32,9 @@ abstract class EnsembleClassifier(val cfg: Config) {
 }
 
 
-class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
+class DecisionTreeClassifier(
+    private val cfg: DecisionTreeConfig,
+) : EnsembleClassifier() {
 
     private lateinit var model: DecisionTree
 
@@ -39,10 +42,10 @@ class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
         model = cart(
             formula = Formula.lhs("diagnosis"),
             data = trainDF,
-            splitRule = cfg.train.decisionTree.splitRule,
-            maxDepth = cfg.train.decisionTree.maxDepth,
-            maxNodes = cfg.train.decisionTree.maxNodes,
-            nodeSize = cfg.train.decisionTree.nodeSize,
+            splitRule = cfg.splitRule,
+            maxDepth = cfg.maxDepth,
+            maxNodes = cfg.maxNodes,
+            nodeSize = cfg.nodeSize,
         )
     }
 
@@ -52,7 +55,7 @@ class DecisionTreeClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 }
 
 
-class RandomForestClassifier(cfg: Config) : EnsembleClassifier(cfg) {
+class RandomForestClassifier(private val cfg: Config) : EnsembleClassifier() {
 
     private lateinit var model: RandomForest
 
@@ -69,7 +72,7 @@ class RandomForestClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             subsample = cfg.train.randomForest.subsample,
             classWeight = cfg.train.randomForest.classWeight,
             seeds = cfg.train.randomForest.seeds,
-            )
+        )
     }
 
     override fun predict(testDF: smile.data.DataFrame): IntArray {
@@ -78,7 +81,7 @@ class RandomForestClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 }
 
 
-class AdaBoostClassifier(cfg: Config) : EnsembleClassifier(cfg) {
+class AdaBoostClassifier(private val cfg: Config) : EnsembleClassifier() {
 
     private var model: AdaBoost? = null
 
@@ -90,7 +93,7 @@ class AdaBoostClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             maxDepth = cfg.train.adaBoost.maxDepth,
             maxNodes = cfg.train.adaBoost.maxNodes,
             nodeSize = cfg.train.adaBoost.nodeSize,
-            )
+        )
     }
 
     override fun predict(testDF: smile.data.DataFrame): IntArray {
@@ -100,7 +103,7 @@ class AdaBoostClassifier(cfg: Config) : EnsembleClassifier(cfg) {
 }
 
 
-class GradientBoostingClassifier(cfg: Config) : EnsembleClassifier(cfg) {
+class GradientBoostingClassifier(private val cfg: Config) : EnsembleClassifier() {
 
     private var model: GradientTreeBoost? = null
 
@@ -114,7 +117,7 @@ class GradientBoostingClassifier(cfg: Config) : EnsembleClassifier(cfg) {
             nodeSize = cfg.train.gradientBoosting.nodeSize,
             shrinkage = cfg.train.gradientBoosting.shrinkage,
             subsample = cfg.train.gradientBoosting.subsample,
-            )
+        )
     }
 
     override fun predict(testDF: smile.data.DataFrame): IntArray {
@@ -154,15 +157,16 @@ class DeepLearningClassifier(private val cfg: Config) {
             activation = Activations.Relu,
             kernelInitializer = HeNormal(cfg.train.deepLearningClassifier.kernelInitializerSeed),
             biasInitializer = Zeros(),
-            ),
-        Dense(outputSize = 2,
-            activation =  Activations.Linear,
+        ),
+        Dense(
+            outputSize = 2,
+            activation = Activations.Linear,
             kernelInitializer = HeNormal(cfg.train.deepLearningClassifier.kernelInitializerSeed),
             biasInitializer = Zeros(),
-            ),
+        ),
     )
 
-    fun fitAndPredict(trainData: OnHeapDataset, testData: OnHeapDataset) : Pair<Sequential, Double?> {
+    fun fitAndPredict(trainData: OnHeapDataset, testData: OnHeapDataset): Pair<Sequential, Double?> {
 
         model.compile(optimizer = SGD(), loss = Losses.SOFT_MAX_CROSS_ENTROPY_WITH_LOGITS, metric = Metrics.ACCURACY)
         model.fit(

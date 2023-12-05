@@ -1,16 +1,44 @@
 package config
 
 import com.charleskorn.kaml.Yaml
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import smile.base.cart.SplitRule
-import java.nio.file.Path
 import java.util.stream.LongStream
+
+enum class Algorithm {
+    @SerialName("decisionTree")
+    DECISION_TREE,
+
+    @SerialName("randomForest")
+    RANDOM_FOREST,
+
+    @SerialName("adaBoost")
+    ADA_BOOST,
+
+    @SerialName("gradientBoosting")
+    GRADIENT_BOOSTING,
+
+    @SerialName("logisticRegression")
+    LOGISTIC_REGRESSION,
+
+    @SerialName("deepLearningClassifier")
+    DEEP_LEARNING_CLASSIFIER,
+}
+
+val ensembleAlgorithms = listOf(
+    Algorithm.DECISION_TREE,
+    Algorithm.RANDOM_FOREST,
+    Algorithm.ADA_BOOST,
+    Algorithm.GRADIENT_BOOSTING,
+)
 
 @Serializable
 data class TrainConfig(
     val runner: String,
-    val algorithm: String,
-    val multipleAlgorithms: List<String>,
+    val algorithm: Algorithm,
+    val algorithms: List<Algorithm>,
     val decisionTree: DecisionTreeConfig,
     val decisionTreeGridSearch: DecisionTreeGridSearchConfig,
     val randomForest: RandomForestConfig,
@@ -98,16 +126,15 @@ data class Config(
     val train: TrainConfig,
     val preProcessing: PreProcessingConfig,
     val preProcessingDL: PreProcessingDeepLearningConfig,
-)
+) {
+    companion object {
+        const val PATH_TO_YAML_CONFIG = "config.yml"
 
-/**
- * Reads a YAML config file to provide all the config parameters.
- * @param filePath Path to the YAML config file
- * @return Config object
- */
-fun readYamlConfig(filePath: String): Config {
-    return Yaml.default.decodeFromString(
-        Config.serializer(),
-        Path.of(filePath).toFile().readText()
-    )
+        fun fromYaml(path: String = PATH_TO_YAML_CONFIG): Config {
+            val contents = object {}.javaClass.classLoader.getResource(path)?.readText()
+                ?: throw Exception("Could not read config file $path")
+
+            return Yaml.default.decodeFromString(contents)
+        }
+    }
 }
