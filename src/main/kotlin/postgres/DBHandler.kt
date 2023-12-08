@@ -8,11 +8,16 @@ import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 
+
 object TrainingResults : IntIdTable() {
     val date = datetime(name = "date").defaultExpression(CurrentDateTime)
     val algorithmName = varchar(name = "algorithm_name", length = 100)
     val accuracy = double(name = "accuracy")
+    val precision = double(name = "precision").default(0.0)
+    val recall = double(name = "recall").default(0.0)
+    val f1Score = double(name = "f1_score").default(0.0)
 }
+
 
 /**
  * Connects to a PostgreSQL database.
@@ -23,9 +28,10 @@ fun connectToDB (dbURL: String) {
         url = dbURL,
         driver = "org.postgresql.Driver",
         user = "postgres",
-        password = System.getenv("POSTGRES_PW")
+        password = System.getenv("POSTGRES_PW"),
     )
 }
+
 
 /**
  * Creates IntIdTable in a database.
@@ -37,16 +43,27 @@ fun createTable (table: IntIdTable) {
     }
 }
 
+
+fun updateTableStructure (table: IntIdTable) {
+    transaction {
+        SchemaUtils.createMissingTablesAndColumns(table)
+    }
+}
+
+
 /**
  * Inserts training results into a database.
  * @param algorithmName The name of the algorithm
- * @param accuracy The accuracy of the model prediction
+ * @param metrics All model prediction classification metrics
  */
-fun insertTrainingResults (algorithmName: String, accuracy: Double) {
+fun insertTrainingResults (algorithmName: String, metrics: Map<String, Double>) {
     transaction {
         TrainingResults.insertAndGetId {
             it[TrainingResults.algorithmName] = algorithmName
-            it[TrainingResults.accuracy] = accuracy
+            it[accuracy] = metrics.getValue("accuracy")
+            it[precision] = metrics.getValue("precision")
+            it[recall] = metrics.getValue("recall")
+            it[f1Score] = metrics.getValue("f1Score")
         }
     }
 }

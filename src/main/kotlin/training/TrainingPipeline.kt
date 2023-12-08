@@ -54,6 +54,7 @@ import postgres.TrainingResults
 import postgres.connectToDB
 import postgres.createTable
 import postgres.insertTrainingResults
+import postgres.updateTableStructure
 import java.io.File
 
 
@@ -153,18 +154,20 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         val f1Score = f1Score(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
         logger.info("F1-Score: $f1Score")
 
-        // Store training results in Postgres DB
-        connectToDB(dbURL = TRAINING_RESULT_DB_URL)
-        createTable(table = TrainingResults)
-        insertTrainingResults(algorithmName = algorithm.toString(), accuracy = accuracy)
-
-        // Log training results in MLflow
-        val metricsForMlflow = mapOf(
+        val metrics = mapOf(
             "accuracy" to accuracy,
             "precision" to precision,
             "recall" to recall,
             "f1Score" to f1Score,
         )
+
+        // Store training results in Postgres DB
+        connectToDB(dbURL = TRAINING_RESULT_DB_URL)
+        createTable(table = TrainingResults)
+        updateTableStructure(table = TrainingResults)
+        insertTrainingResults(algorithmName = algorithm.toString(), metrics = metrics)
+
+        // Log training results in MLflow
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
         val runID = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
@@ -175,7 +178,7 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         logMlflowInformation(
             client = mlflowClient,
             runID = runID,
-            metrics = metricsForMlflow,
+            metrics = metrics,
             paramKey = "algorithm",
             paramValue = algorithm.toString(),
             tagKey = "dataset",
@@ -275,18 +278,19 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
         val f1Score = f1Score(yTrue = yTestIntArray, yPred = predictions)
         logger.info("F1-Score: $f1Score")
 
-        // Store training results in Postgres DB
-        connectToDB(dbURL = TRAINING_RESULT_DB_URL)
-        createTable(table = TrainingResults)
-        insertTrainingResults(algorithmName = algorithm.toString(), accuracy = accuracy)
-
-        // Log training result in MLflow
-        val metricsForMlflow = mapOf(
+        val metrics = mapOf(
             "accuracy" to accuracy,
             "precision" to precision,
             "recall" to recall,
             "f1Score" to f1Score,
         )
+
+        // Store training results in Postgres DB
+        connectToDB(dbURL = TRAINING_RESULT_DB_URL)
+        createTable(table = TrainingResults)
+        insertTrainingResults(algorithmName = algorithm.toString(), metrics = metrics)
+
+        // Log training result in MLflow
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
         val runID = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
@@ -296,7 +300,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
         logMlflowInformation(
             client = mlflowClient,
             runID = runID,
-            metrics = metricsForMlflow,
+            metrics = metrics,
             paramKey = "algorithm",
             paramValue = algorithm.toString(),
             tagKey = "dataset",
@@ -377,15 +381,23 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
             logger.info("Accuracy: ${round(value = nonNullAccuracy, places = 4)}")
         }
 
+        val metrics = mapOf(
+            "accuracy" to round(value = accuracy, places = 4),
+            "precision" to 0.0,
+            "recall" to 0.0,
+            "f1Score" to 0.0,
+        )
+
         // Store training results in Postgres DB
         connectToDB(dbURL = TRAINING_RESULT_DB_URL)
         createTable(table = TrainingResults)
-        accuracy?.let { nonNullAccuracy ->
-            insertTrainingResults(
-                algorithmName = algorithm.toString(),
-                accuracy = round(value = nonNullAccuracy, places = 4)
-            )
-        }
+        updateTableStructure(table = TrainingResults)
+
+        insertTrainingResults(
+            algorithmName = algorithm.toString(),
+            metrics = metrics,
+        )
+
         // Log training result in MLflow
         val metricsForMlflow = mapOf(
             "accuracy" to round(value = accuracy, places = 4),
