@@ -89,18 +89,18 @@ suspend fun readCSVAsSmileDFAsync(path: String): smile.data.DataFrame {
 
 /**
  * Deletes all folders in a directory that are older than 2 days.
- * @param folderPath: Path to the directory that contains the folders to be deleted
+ * @param path: Path to the directory that contains the folders to be deleted
  */
-fun deleteFolder(folderPath: File) {
+fun deleteFileOrFolder(path: File) {
 
-    val folders = folderPath.listFiles() ?: emptyArray()
+    val filesOrFolders = path.listFiles() ?: emptyArray()
 
-    for(folder in folders) {
-        val lastModified = Date(folder.lastModified())
+    for(fileOrFolder in filesOrFolders) {
+        val lastModified = Date(fileOrFolder.lastModified())
         val currentDateMinus2Days = Date(System.currentTimeMillis() - 2 * 24 * 60 * 60 * 1000)
         if (currentDateMinus2Days > lastModified) {
-            folder.deleteRecursively()
-            ProjectLogger.logger.info("Deleted results folder: $folder")
+            fileOrFolder.deleteRecursively()
+            ProjectLogger.logger.info("Deleted file/folder: $fileOrFolder")
         }
     }
 }

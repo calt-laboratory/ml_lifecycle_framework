@@ -7,16 +7,17 @@ import config.Algorithm
 import config.Config
 import constants.MLFLOW_EXPERIMENT_NAME
 import constants.PATH_TO_DATASET
-import constants.PATH_TO_PREPROCESSED_DATASET
-import constants.PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
-import constants.PATH_TO_PREPROCESSED_TEST_DATASET
-import constants.PATH_TO_PREPROCESSED_TRAIN_DATASET
+import constants.PATH_TO_PREPROCESSED_FOLDER
 import constants.PATH_TO_PREPROCESSED_X_DATA
 import constants.PATH_TO_PREPROCESSED_Y_DATA
 import constants.PATH_TO_TRAINED_MODELS
+import constants.PREPROCESSED_DATASET
 import constants.PREPROCESSED_FILE_NAME
+import constants.PREPROCESSED_SMILE_Y_TEST_DATA
 import constants.PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME
+import constants.PREPROCESSED_TEST_DATASET
 import constants.PREPROCESSED_TEST_DATASET_FILE_NAME
+import constants.PREPROCESSED_TRAIN_DATASET
 import constants.PREPROCESSED_TRAIN_DATASET_FILE_NAME
 import constants.PREPROCESSED_X_DATA_FILE_NAME
 import constants.PREPROCESSED_Y_DATA_FILE_NAME
@@ -30,6 +31,7 @@ import dataProcessing.trainTestSplitForKotlinDL
 import dataProcessing.trainTestSplitForSmile
 import datatypeHandling.to2DDoubleArray
 import datatypeHandling.toIntArray
+import datetime.createTimeStamp
 import formulas.accuracy
 import formulas.f1Score
 import formulas.precision
@@ -38,7 +40,7 @@ import formulas.round
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import localFileManagement.deleteFolder
+import localFileManagement.deleteFileOrFolder
 import localFileManagement.readCSVAsKotlinDF
 import localFileManagement.readCSVAsKotlinDFAsync
 import localFileManagement.readCSVAsSmileDFAsync
@@ -93,12 +95,25 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
             randomState = cfg.preProcessing.seed,
         )
 
+        // Delete all preprocessed files older than 2 days
+        deleteFileOrFolder(path = File(PATH_TO_PREPROCESSED_FOLDER))
+
+        // Create preprocessed dataset folder name with timestamp
+        val preProcessedFolderName = PATH_TO_PREPROCESSED_FOLDER + createTimeStamp() + "_"
+
+        val pathsToPreProcessedDatasets = mapOf(
+            "pathToPreProcessedDataset" to preProcessedFolderName + PREPROCESSED_DATASET,
+            "pathToPreProcessedTrainDataset" to preProcessedFolderName + PREPROCESSED_TRAIN_DATASET,
+            "pathToPreProcessedTestDataset" to preProcessedFolderName + PREPROCESSED_TEST_DATASET,
+            "pathToPreProcessedSmileYTestData" to preProcessedFolderName + PREPROCESSED_SMILE_Y_TEST_DATA,
+        )
+
         // Store Kotlin DFs locally
         val dataframesAndPaths = listOf(
-            preProcessedDF to PATH_TO_PREPROCESSED_DATASET,
-            trainData to PATH_TO_PREPROCESSED_TRAIN_DATASET,
-            testData to PATH_TO_PREPROCESSED_TEST_DATASET,
-            yTestData.toDataFrame() to PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA
+            preProcessedDF to pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset"),
+            trainData to pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset"),
+            testData to pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset"),
+            yTestData.toDataFrame() to pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData"),
         )
         val preProcessedKotlinDFToStore = dataframesAndPaths.map { (df, path) ->
             async { storeKotlinDFAsCSVAsync(df, path) }
@@ -107,10 +122,10 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_FILE_NAME, PATH_TO_PREPROCESSED_DATASET),
-            Pair(PREPROCESSED_TRAIN_DATASET_FILE_NAME, PATH_TO_PREPROCESSED_TRAIN_DATASET),
-            Pair(PREPROCESSED_TEST_DATASET_FILE_NAME, PATH_TO_PREPROCESSED_TEST_DATASET),
-            Pair(PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME, PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA),
+            Pair(PREPROCESSED_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
+            Pair(PREPROCESSED_TRAIN_DATASET_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")),
+            Pair(PREPROCESSED_TEST_DATASET_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")),
+            Pair(PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")),
         )
 
         val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
@@ -126,9 +141,9 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         deferredUploads.awaitAll()
 
         // Read in preprocessed data
-        val preProcessedTrainData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TRAIN_DATASET) }.await()
-        val preProcessedTestData = async { readCSVAsSmileDFAsync(PATH_TO_PREPROCESSED_TEST_DATASET) }.await()
-        val preProcessedYTestData = async { readCSVAsKotlinDFAsync(PATH_TO_PREPROCESSED_SMILE_Y_TEST_DATA) }.await()
+        val preProcessedTrainData = async { readCSVAsSmileDFAsync(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")) }.await()
+        val preProcessedTestData = async { readCSVAsSmileDFAsync(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")) }.await()
+        val preProcessedYTestData = async { readCSVAsKotlinDFAsync(pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")) }.await()
 
         val model = when (algorithm) {
             Algorithm.DECISION_TREE -> DecisionTreeClassifier(decisionTreeConfig = cfg.train.decisionTree)
@@ -212,7 +227,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
 
         // Store Kotlin DF's locally
         val kotlinDFsAndPaths = listOf(
-            preProcessedDF to PATH_TO_PREPROCESSED_DATASET,
+            preProcessedDF to PREPROCESSED_DATASET,
             xData to PATH_TO_PREPROCESSED_X_DATA,
             yData.toDataFrame() to PATH_TO_PREPROCESSED_Y_DATA,
         )
@@ -223,7 +238,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_FILE_NAME, PATH_TO_PREPROCESSED_DATASET),
+            Pair(PREPROCESSED_FILE_NAME, PREPROCESSED_DATASET),
             Pair(PREPROCESSED_X_DATA_FILE_NAME, PATH_TO_PREPROCESSED_X_DATA),
             Pair(PREPROCESSED_Y_DATA_FILE_NAME, PATH_TO_PREPROCESSED_Y_DATA),
         )
@@ -373,7 +388,7 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
         logger.info("Deep Learning training started")
 
         // Delete folder if older than > 2 days
-        deleteFolder(folderPath = File(PATH_TO_TRAINED_MODELS))
+        deleteFileOrFolder(path = File(PATH_TO_TRAINED_MODELS))
         // Save the model results
         saveDLClassifierModel(model = dlModel)
 
