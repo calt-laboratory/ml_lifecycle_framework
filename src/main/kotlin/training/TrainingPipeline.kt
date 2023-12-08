@@ -8,19 +8,13 @@ import config.Config
 import constants.MLFLOW_EXPERIMENT_NAME
 import constants.PATH_TO_DATASET
 import constants.PATH_TO_PREPROCESSED_FOLDER
-import constants.PATH_TO_PREPROCESSED_X_DATA
-import constants.PATH_TO_PREPROCESSED_Y_DATA
 import constants.PATH_TO_TRAINED_MODELS
 import constants.PREPROCESSED_DATASET
-import constants.PREPROCESSED_FILE_NAME
 import constants.PREPROCESSED_SMILE_Y_TEST_DATA
-import constants.PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME
 import constants.PREPROCESSED_TEST_DATASET
-import constants.PREPROCESSED_TEST_DATASET_FILE_NAME
 import constants.PREPROCESSED_TRAIN_DATASET
-import constants.PREPROCESSED_TRAIN_DATASET_FILE_NAME
-import constants.PREPROCESSED_X_DATA_FILE_NAME
-import constants.PREPROCESSED_Y_DATA_FILE_NAME
+import constants.PREPROCESSED_X_DATA
+import constants.PREPROCESSED_Y_DATA
 import constants.PROCESSED_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_DATA_BLOB_CONTAINER_NAME
 import constants.RAW_FILE_NAME
@@ -122,10 +116,10 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
-            Pair(PREPROCESSED_TRAIN_DATASET_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")),
-            Pair(PREPROCESSED_TEST_DATASET_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")),
-            Pair(PREPROCESSED_SMILE_Y_TEST_DATASET_FILE_NAME, pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")),
+            Pair(PREPROCESSED_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
+            Pair(PREPROCESSED_TRAIN_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")),
+            Pair(PREPROCESSED_TEST_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")),
+            Pair(PREPROCESSED_SMILE_Y_TEST_DATA, pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")),
         )
 
         val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
@@ -225,11 +219,23 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
         val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
         val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
 
+        // Delete all preprocessed files older than 2 days
+        deleteFileOrFolder(path = File(PATH_TO_PREPROCESSED_FOLDER))
+
+        // Create preprocessed dataset folder name with timestamp
+        val preProcessedFolderName = PATH_TO_PREPROCESSED_FOLDER + createTimeStamp() + "_"
+
+        val pathsToPreProcessedDatasets = mapOf(
+            "pathToPreProcessedDataset" to preProcessedFolderName + PREPROCESSED_DATASET,
+            "pathToPreProcessedXData" to preProcessedFolderName + PREPROCESSED_X_DATA,
+            "pathToPreProcessedYData" to preProcessedFolderName + PREPROCESSED_Y_DATA,
+        )
+
         // Store Kotlin DF's locally
         val kotlinDFsAndPaths = listOf(
-            preProcessedDF to PREPROCESSED_DATASET,
-            xData to PATH_TO_PREPROCESSED_X_DATA,
-            yData.toDataFrame() to PATH_TO_PREPROCESSED_Y_DATA,
+            preProcessedDF to pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset"),
+            xData to pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData"),
+            yData.toDataFrame() to pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData"),
         )
         val preProcessedKotlinDFsToStore = kotlinDFsAndPaths.map { (df, path) ->
             async { storeKotlinDFAsCSVAsync(df, path) }
@@ -238,9 +244,9 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_FILE_NAME, PREPROCESSED_DATASET),
-            Pair(PREPROCESSED_X_DATA_FILE_NAME, PATH_TO_PREPROCESSED_X_DATA),
-            Pair(PREPROCESSED_Y_DATA_FILE_NAME, PATH_TO_PREPROCESSED_Y_DATA),
+            Pair(PREPROCESSED_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
+            Pair(PREPROCESSED_X_DATA, pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")),
+            Pair(PREPROCESSED_Y_DATA, pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")),
         )
 
         val deferredUploads = filesToUpload.map {
@@ -255,8 +261,8 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
         }
         deferredUploads.awaitAll()
 
-        val prePreProcessedXData = async { readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_X_DATA) }.await()
-        val prePreProcessedYData = async { readCSVAsKotlinDF(path = PATH_TO_PREPROCESSED_Y_DATA) }.await()
+        val prePreProcessedXData = async { readCSVAsKotlinDF(path = pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")) }.await()
+        val prePreProcessedYData = async { readCSVAsKotlinDF(path = pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")) }.await()
 
         val (xTrain, xTest, yTrain, yTest) = trainTestSplit(
             xData = prePreProcessedXData,
@@ -352,8 +358,8 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
 
         // Store Kotlin DF locally
         val kotlinDFsAndPaths = listOf(
-            xData to PATH_TO_PREPROCESSED_X_DATA,
-            yData.toDataFrame() to PATH_TO_PREPROCESSED_Y_DATA,
+            xData to PREPROCESSED_X_DATA,
+            yData.toDataFrame() to PREPROCESSED_Y_DATA,
         )
         val preProcessedKotlinDFsToStore = kotlinDFsAndPaths.map { (df, path) ->
             async { storeKotlinDFAsCSVAsync(df, path) }
@@ -362,8 +368,8 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_X_DATA_FILE_NAME, PATH_TO_PREPROCESSED_X_DATA),
-            Pair(PREPROCESSED_Y_DATA_FILE_NAME, PATH_TO_PREPROCESSED_Y_DATA),
+            Pair(PREPROCESSED_X_DATA, PREPROCESSED_X_DATA),
+            Pair(PREPROCESSED_Y_DATA, PREPROCESSED_Y_DATA),
         )
         val deferredUploads = filesToUpload.map {
             async {
