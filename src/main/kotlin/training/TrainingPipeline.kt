@@ -116,10 +116,10 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
-            Pair(PREPROCESSED_TRAIN_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")),
-            Pair(PREPROCESSED_TEST_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")),
-            Pair(PREPROCESSED_SMILE_Y_TEST_DATA, pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")),
         )
 
         val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
@@ -244,9 +244,9 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_DATASET, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
-            Pair(PREPROCESSED_X_DATA, pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")),
-            Pair(PREPROCESSED_Y_DATA, pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")),
         )
 
         val deferredUploads = filesToUpload.map {
