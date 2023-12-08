@@ -354,12 +354,25 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
         }
 
         val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
-        val (_, xData, yData) = dataPreProcessing(df = data)
+        val (preProcessedDF, xData, yData) = dataPreProcessing(df = data)
+
+        // Delete all preprocessed files older than 2 days
+        deleteFileOrFolder(path = File(PATH_TO_PREPROCESSED_FOLDER))
+
+        // Create preprocessed dataset folder name with timestamp
+        val preProcessedFolderName = PATH_TO_PREPROCESSED_FOLDER + createTimeStamp() + "_"
+
+        val pathsToPreProcessedDatasets = mapOf(
+            "pathToPreProcessedDataset" to preProcessedFolderName + PREPROCESSED_DATASET,
+            "pathToPreProcessedXData" to preProcessedFolderName + PREPROCESSED_X_DATA,
+            "pathToPreProcessedYData" to preProcessedFolderName + PREPROCESSED_Y_DATA,
+        )
 
         // Store Kotlin DF locally
         val kotlinDFsAndPaths = listOf(
-            xData to PREPROCESSED_X_DATA,
-            yData.toDataFrame() to PREPROCESSED_Y_DATA,
+            preProcessedDF to pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset"),
+            xData to pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData"),
+            yData.toDataFrame() to pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData"),
         )
         val preProcessedKotlinDFsToStore = kotlinDFsAndPaths.map { (df, path) ->
             async { storeKotlinDFAsCSVAsync(df, path) }
@@ -368,8 +381,9 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
 
         // Upload preprocessed data to Blob
         val filesToUpload = listOf(
-            Pair(PREPROCESSED_X_DATA, PREPROCESSED_X_DATA),
-            Pair(PREPROCESSED_Y_DATA, PREPROCESSED_Y_DATA),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")),
+            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")),
         )
         val deferredUploads = filesToUpload.map {
             async {
