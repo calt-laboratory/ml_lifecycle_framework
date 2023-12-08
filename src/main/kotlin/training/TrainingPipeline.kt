@@ -44,6 +44,7 @@ import localFileManagement.readCSVAsKotlinDFAsync
 import localFileManagement.readCSVAsSmileDFAsync
 import localFileManagement.saveDLClassifierModel
 import localFileManagement.storeKotlinDFAsCSVAsync
+import mlflow.defineMLflowRunName
 import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
@@ -157,7 +158,7 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         createTable(table = TrainingResults)
         insertTrainingResults(algorithmName = algorithm.toString(), accuracy = accuracy)
 
-        // Log training result in MLflow
+        // Log training results in MLflow
         val metricsForMlflow = mapOf(
             "accuracy" to accuracy,
             "precision" to precision,
@@ -165,13 +166,14 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
             "f1Score" to f1Score,
         )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
-        val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
+        val runID = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
             mlflowClient = mlflowClient,
             isMlflowServerRunning = isMlflowServerRunning,
         )
+
         logMlflowInformation(
-            client = mlflowClientForExperiment,
+            client = mlflowClient,
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
@@ -179,6 +181,7 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
+        defineMLflowRunName(client = mlflowClient, runID = runID, algorithm = algorithm)
     }
 }
 
@@ -285,13 +288,13 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
             "f1Score" to f1Score,
         )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
-        val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
+        val runID = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
             mlflowClient = mlflowClient,
             isMlflowServerRunning = isMlflowServerRunning,
         )
         logMlflowInformation(
-            client = mlflowClientForExperiment,
+            client = mlflowClient,
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
@@ -299,6 +302,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
+        defineMLflowRunName(client = mlflowClient, runID = runID, algorithm = algorithm)
     }
 }
 
@@ -387,13 +391,13 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
             "accuracy" to round(value = accuracy, places = 4),
         )
         val (mlflowClient, isMlflowServerRunning) = getMlflowClient()
-        val (mlflowClientForExperiment, runID) = getOrCreateMlflowExperiment(
+        val runID = getOrCreateMlflowExperiment(
             name = MLFLOW_EXPERIMENT_NAME,
             mlflowClient = mlflowClient,
             isMlflowServerRunning = isMlflowServerRunning,
         )
         logMlflowInformation(
-            client = mlflowClientForExperiment,
+            client = mlflowClient,
             runID = runID,
             metrics = metricsForMlflow,
             paramKey = "algorithm",
@@ -401,5 +405,6 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
             tagKey = "dataset",
             tagValue = "breast_cancer",
         )
+        defineMLflowRunName(client = mlflowClient, runID = runID, algorithm = algorithm)
     }
 }

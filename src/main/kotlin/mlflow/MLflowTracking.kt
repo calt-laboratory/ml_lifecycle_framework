@@ -1,6 +1,8 @@
 package mlflow
 
+import config.Algorithm
 import constants.MLFLOW_TRACKING_URI
+import datetime.createTimeStamp
 import httpServices.isMlflowServerRunning
 import logging.ProjectLogger.logger
 import org.mlflow.tracking.MlflowClient
@@ -14,7 +16,7 @@ import java.util.concurrent.TimeUnit
  */
 fun logMlflowInformation(
     client: MlflowClient,
-    runID: String?,
+    runID: String,
     metrics: Map<String, Double?>,
     paramKey: String?,
     paramValue: String?,
@@ -40,6 +42,16 @@ fun logMlflowInformation(
     }
 }
 
+
+/**
+ * Defines a custom MLflow run name for the current run.
+ */
+fun defineMLflowRunName(client: MlflowClient, runID: String, algorithm: Algorithm) {
+    val runName = createTimeStamp() + "_$algorithm"
+    client.setTag(runID, "mlflow.runName", runName)
+}
+
+
 /**
  * Gets a Mlflow client based on the MLFLOW_TRACKING_URI and checks if the MLflow server is running.
  * @return Pair of MlflowClient and Boolean (if the MLflow server is running)
@@ -58,6 +70,7 @@ fun getMlflowClient() : Pair<MlflowClient, Boolean> {
     }
 }
 
+
 /**
  * Gets a Mlflow experiment by name or creates a new one if it does not exist.
  */
@@ -65,13 +78,13 @@ fun getOrCreateMlflowExperiment(
     name: String,
     mlflowClient: MlflowClient,
     isMlflowServerRunning: Boolean,
-    ) : Pair<MlflowClient, String?>
+    ) : String
 {
     if (!isMlflowServerRunning) {
         startMlflowServer()
     }
-    var experimentID: String
 
+    var experimentID: String
     try {
         experimentID = mlflowClient.getExperimentByName(name).get().experimentId
         logger.info("MLflow experiment '$name' was found")
@@ -81,8 +94,9 @@ fun getOrCreateMlflowExperiment(
     }
 
     val runInfo = mlflowClient.createRun(experimentID)
-    return Pair(mlflowClient, runInfo.runId)
+    return runInfo.runId
 }
+
 
 /**
  * Starts a MLflow Tracking using a cli command based on the operating system (Linux, Mac, Windows).
@@ -90,6 +104,7 @@ fun getOrCreateMlflowExperiment(
 fun startMlflowServer() {
     val os = System.getProperty("os.name").lowercase()
     logger.info("Starting MLflow Tracking server...")
+
     if (os.contains("linux") or os.contains("mac")) {
         logger.info("Using operating system: $os")
         "mlflow server".runCommand()
