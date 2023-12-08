@@ -383,9 +383,9 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
 
         val metrics = mapOf(
             "accuracy" to round(value = accuracy, places = 4),
-            "precision" to 0.0,
-            "recall" to 0.0,
-            "f1Score" to 0.0,
+            "precision" to null as Double?,
+            "recall" to null as Double?,
+            "f1Score" to null as Double?,
         )
 
         // Store training results in Postgres DB

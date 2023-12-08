@@ -12,10 +12,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object TrainingResults : IntIdTable() {
     val date = datetime(name = "date").defaultExpression(CurrentDateTime)
     val algorithmName = varchar(name = "algorithm_name", length = 100)
-    val accuracy = double(name = "accuracy")
-    val precision = double(name = "precision").default(0.0)
-    val recall = double(name = "recall").default(0.0)
-    val f1Score = double(name = "f1_score").default(0.0)
+    val accuracy = double(name = "accuracy").nullable()
+    val precision = double(name = "precision").nullable()
+    val recall = double(name = "recall").nullable()
+    val f1Score = double(name = "f1_score").nullable()
 }
 
 
@@ -56,7 +56,7 @@ fun updateTableStructure (table: IntIdTable) {
  * @param algorithmName The name of the algorithm
  * @param metrics All model prediction classification metrics
  */
-fun insertTrainingResults (algorithmName: String, metrics: Map<String, Double>) {
+fun insertTrainingResults (algorithmName: String, metrics: Map<String, Double?>) {
     transaction {
         TrainingResults.insertAndGetId {
             it[TrainingResults.algorithmName] = algorithmName
