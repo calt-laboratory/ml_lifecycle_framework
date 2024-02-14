@@ -8,7 +8,6 @@ import logging.ProjectLogger.logger
 import org.mlflow.tracking.MlflowClient
 import org.mlflow.tracking.MlflowContext
 import runCommand
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -111,7 +110,19 @@ fun startMlflowServer() {
         logger.info("MLflow Tracking server is running")
     } else if (os.contains("windows")) {
         logger.info("Using operating system: $os")
-        Runtime.getRuntime().exec("mlflow server").waitFor(25, TimeUnit.SECONDS)
-        logger.info("MLflow Tracking server is running")
+        try {
+            Runtime.getRuntime().exec("mlflow server")
+            logger.info("MLflow Tracking server is running")
+        } catch (e: java.io.IOException) {
+            val errorMessage = "Error while starting MLflow server: ${e.message}"
+            logger.error(errorMessage)
+            println(errorMessage)
+            logger.info("Trying to install mlflow and start MLflow server again...")
+            Runtime.getRuntime().exec("pip install mlflow").waitFor()
+            Runtime.getRuntime().exec("mlflow server")
+            logger.info("MLflow Tracking server is running")
+        }
+    } else {
+        logger.error("Unsupported operating system: $os")
     }
 }

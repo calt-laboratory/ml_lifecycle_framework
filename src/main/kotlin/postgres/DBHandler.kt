@@ -28,7 +28,8 @@ fun connectToDB (dbURL: String) {
         url = dbURL,
         driver = "org.postgresql.Driver",
         user = "postgres",
-        password = System.getenv("POSTGRES_PW"),
+        password = "password"
+        // password = System.getenv("POSTGRES_PW"),
     )
 }
 
