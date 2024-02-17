@@ -116,9 +116,8 @@ fun startMlflowServer() {
         } catch (e: java.io.IOException) {
             val errorMessage = "Error while starting MLflow server: ${e.message}"
             logger.error(errorMessage)
-            println(errorMessage)
             logger.info("Trying to install mlflow and start MLflow server again...")
-            Runtime.getRuntime().exec("pip install mlflow").waitFor()
+            Runtime.getRuntime().exec("pip install mlflow")
             Runtime.getRuntime().exec("mlflow server")
             logger.info("MLflow Tracking server is running")
         }

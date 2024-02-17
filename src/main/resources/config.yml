@@ -1,5 +1,5 @@
 train:
-  algorithms: ["decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"]
+  algorithms: ["adaBoost"]
   # "decisionTree", "randomForest", "adaBoost", "gradientBoosting", "logisticRegression", "deepLearningClassifier"
 
   decisionTree:
@@ -56,3 +56,6 @@ preProcessing:
 
 preProcessingDL:
   trainSize: 0.8
+
+cloudProvider:
+  azure: True

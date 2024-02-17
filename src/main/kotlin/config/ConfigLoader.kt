@@ -120,10 +120,14 @@ data class PreProcessingDeepLearningConfig(
 )
 
 @Serializable
+data class CloudProvider(val azure: Boolean)
+
+@Serializable
 data class Config(
     val train: TrainConfig,
     val preProcessing: PreProcessingConfig,
     val preProcessingDL: PreProcessingDeepLearningConfig,
+    val cloudProvider: CloudProvider,
 ) {
     companion object {
         private const val PATH_TO_YAML_CONFIG = "config.yml"
@@ -131,7 +135,6 @@ data class Config(
         fun fromYaml(path: String = PATH_TO_YAML_CONFIG): Config {
             val contents = object {}.javaClass.classLoader.getResource(path)?.readText()
                 ?: throw Exception("Could not read config file $path")
-
             return Yaml.default.decodeFromString(contents)
         }
     }

@@ -5,20 +5,7 @@ import azure.getBlobClientConnection
 import azure.uploadFileToBlob
 import config.Algorithm
 import config.Config
-import constants.MLFLOW_EXPERIMENT_NAME
-import constants.PATH_TO_DATASET
-import constants.PATH_TO_PREPROCESSED_FOLDER
-import constants.PATH_TO_TRAINED_MODELS
-import constants.PREPROCESSED_DATASET
-import constants.PREPROCESSED_SMILE_Y_TEST_DATA
-import constants.PREPROCESSED_TEST_DATASET
-import constants.PREPROCESSED_TRAIN_DATASET
-import constants.PREPROCESSED_X_DATA
-import constants.PREPROCESSED_Y_DATA
-import constants.PROCESSED_DATA_BLOB_CONTAINER_NAME
-import constants.RAW_DATA_BLOB_CONTAINER_NAME
-import constants.RAW_FILE_NAME
-import constants.TRAINING_RESULT_DB_URL
+import constants.*
 import dataProcessing.dataPreProcessing
 import dataProcessing.trainTestSplit
 import dataProcessing.trainTestSplitForKotlinDL
@@ -26,31 +13,18 @@ import dataProcessing.trainTestSplitForSmile
 import datatypeHandling.to2DDoubleArray
 import datatypeHandling.toIntArray
 import datetime.createTimeStamp
-import formulas.accuracy
-import formulas.f1Score
-import formulas.precision
-import formulas.recall
-import formulas.round
+import formulas.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import localFileManagement.deleteFileOrFolder
-import localFileManagement.readCSVAsKotlinDF
-import localFileManagement.readCSVAsKotlinDFAsync
-import localFileManagement.readCSVAsSmileDFAsync
-import localFileManagement.saveDLClassifierModel
-import localFileManagement.storeKotlinDFAsCSVAsync
+import localFileManagement.*
 import mlflow.defineMLflowRunName
 import mlflow.getMlflowClient
 import mlflow.getOrCreateMlflowExperiment
 import mlflow.logMlflowInformation
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.slf4j.LoggerFactory
-import postgres.TrainingResults
-import postgres.connectToDB
-import postgres.createTable
-import postgres.insertTrainingResults
-import postgres.updateTableStructure
+import postgres.*
 import java.io.File
 
 
@@ -70,7 +44,7 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         logger.info("Starting ensemble training pipeline...")
         val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
-        if (!File(PATH_TO_DATASET).exists()) {
+        if (!File(PATH_TO_DATASET).exists() && cfg.cloudProvider.azure) {
             logger.info("Downloading original dataset from Blob...")
             val blobClient = getBlobClientConnection(
                 storageConnectionString = storageConnectionString,
@@ -115,14 +89,30 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         preProcessedKotlinDFToStore.awaitAll()
 
         // Upload preprocessed data to Blob
-        val filesToUpload = listOf(
-            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
-            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")),
-            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")),
-            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")),
-        )
+        val filesToUpload: List<Pair<String, String>>? = if (cfg.cloudProvider.azure) {
+            listOf(
+                Pair(
+                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name,
+                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")
+                ),
+                Pair(
+                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")).name,
+                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")
+                ),
+                Pair(
+                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")).name,
+                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")
+                ),
+                Pair(
+                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")).name,
+                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")
+                ),
+            )
+        } else {
+            null
+        }
 
-        val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
+        val deferredUploads = filesToUpload?.map { (fileName, localFilePath) ->
             async {
                 val blobClientPreProcessedData = getBlobClientConnection(
                     storageConnectionString = storageConnectionString,
@@ -132,7 +122,7 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
                 uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = localFilePath)
             }
         }
-        deferredUploads.awaitAll()
+        deferredUploads?.awaitAll()
 
         // Read in preprocessed data
         val preProcessedTrainData = async { readCSVAsSmileDFAsync(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")) }.await()
@@ -149,6 +139,15 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         }
         logger.info("$algorithm training started")
         model.fit(trainDF = preProcessedTrainData)
+
+        // TODO: Fix model storage
+        /* Store model
+        val resultFolderName = createTimeStamp() + "_${algorithm}/"
+        val pathToResults = File(PATH_TO_TRAINED_MODELS + resultFolderName)
+
+        storeSmileClassifierModel(model = model, path = pathToResults)
+        */
+
         val predictions = model.predict(testDF = preProcessedTestData)
 
         val accuracy = accuracy(yTrue = preProcessedYTestData["diagnosis"].toIntArray(), yPred = predictions)
@@ -231,7 +230,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
             "pathToPreProcessedYData" to preProcessedFolderName + PREPROCESSED_Y_DATA,
         )
 
-        // Store Kotlin DF's locally
+        // Store Kotlin DFs locally
         val kotlinDFsAndPaths = listOf(
             preProcessedDF to pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset"),
             xData to pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData"),
@@ -407,7 +406,7 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
         val (dlModel, accuracy) = deepLearningClassifier.fitAndPredict(trainData = train, testData = test)
         logger.info("Deep Learning training started")
 
-        // Delete folder if older than > 2 days
+        // Delete model result folder if older than > 2 days
         deleteFileOrFolder(path = File(PATH_TO_TRAINED_MODELS))
         // Save the model results
         saveDLClassifierModel(model = dlModel)
