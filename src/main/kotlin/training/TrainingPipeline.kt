@@ -89,40 +89,39 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         preProcessedKotlinDFToStore.awaitAll()
 
         // Upload preprocessed data to Blob
-        val filesToUpload: List<Pair<String, String>>? = if (cfg.cloudProvider.azure) {
-            listOf(
-                Pair(
-                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name,
-                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")
-                ),
-                Pair(
-                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")).name,
-                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")
-                ),
-                Pair(
-                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")).name,
-                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")
-                ),
-                Pair(
-                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")).name,
-                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")
-                ),
-            )
-        } else {
-            null
-        }
-
-        val deferredUploads = filesToUpload?.map { (fileName, localFilePath) ->
-            async {
-                val blobClientPreProcessedData = getBlobClientConnection(
-                    storageConnectionString = storageConnectionString,
-                    blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
-                    fileName = fileName
+        if (cfg.cloudProvider.azure) {
+            val filesToUpload =
+                listOf(
+                    Pair(
+                        File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name,
+                        pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")
+                    ),
+                    Pair(
+                        File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")).name,
+                        pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")
+                    ),
+                    Pair(
+                        File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")).name,
+                        pathsToPreProcessedDatasets.getValue("pathToPreProcessedTestDataset")
+                    ),
+                    Pair(
+                        File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")).name,
+                        pathsToPreProcessedDatasets.getValue("pathToPreProcessedSmileYTestData")
+                    ),
                 )
-                uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = localFilePath)
+            logger.info("Uploading preprocessed data to Azure Blob Storage...")
+            val deferredUploads = filesToUpload.map { (fileName, localFilePath) ->
+                async {
+                    val blobClientPreProcessedData = getBlobClientConnection(
+                        storageConnectionString = storageConnectionString,
+                        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+                        fileName = fileName
+                    )
+                    uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = localFilePath)
+                }
             }
+            deferredUploads.awaitAll()
         }
-        deferredUploads?.awaitAll()
 
         // Read in preprocessed data
         val preProcessedTrainData = async { readCSVAsSmileDFAsync(pathsToPreProcessedDatasets.getValue("pathToPreProcessedTrainDataset")) }.await()
@@ -257,7 +256,7 @@ class LogisticRegressionTrainingPipeline(cfg: Config, val algorithm: Algorithm) 
                     pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")
                 ),
             )
-
+            logger.info("Uploading preprocessed data to Azure Blob Storage...")
             val deferredUploads = filesToUpload.map {
                 async {
                     val blobClientPreProcessedData = getBlobClientConnection(
@@ -353,7 +352,7 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
         logger.info("Starting the Deep Learning Classifier pipeline...")
         val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
-        if (!File(PATH_TO_DATASET).exists()) {
+        if (!File(PATH_TO_DATASET).exists() && cfg.cloudProvider.azure) {
             logger.info("Downloading original dataset from Blob...")
             val blobClient = getBlobClientConnection(
                 storageConnectionString = storageConnectionString,
@@ -390,22 +389,34 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
         preProcessedKotlinDFsToStore.awaitAll()
 
         // Upload preprocessed data to Blob
-        val filesToUpload = listOf(
-            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")),
-            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")),
-            Pair(File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")).name, pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")),
-        )
-        val deferredUploads = filesToUpload.map {
-            async {
-                val blobClientPreProcessedData = getBlobClientConnection(
-                    storageConnectionString = storageConnectionString,
-                    blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
-                    fileName = it.first
-                )
-                uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = it.second)
+        if (cfg.cloudProvider.azure) {
+            val filesToUpload = listOf(
+                Pair(
+                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")).name,
+                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedDataset")
+                ),
+                Pair(
+                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")).name,
+                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedXData")
+                ),
+                Pair(
+                    File(pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")).name,
+                    pathsToPreProcessedDatasets.getValue("pathToPreProcessedYData")
+                ),
+            )
+            logger.info("Uploading preprocessed data to Azure Blob Storage...")
+            val deferredUploads = filesToUpload.map {
+                async {
+                    val blobClientPreProcessedData = getBlobClientConnection(
+                        storageConnectionString = storageConnectionString,
+                        blobContainerName = PROCESSED_DATA_BLOB_CONTAINER_NAME,
+                        fileName = it.first
+                    )
+                    uploadFileToBlob(blobClient = blobClientPreProcessedData, filePath = it.second)
+                }
             }
+            deferredUploads.awaitAll()
         }
-        deferredUploads.awaitAll()
 
         val (train, test) = trainTestSplitForKotlinDL(
             xData = xData,
