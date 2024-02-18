@@ -120,7 +120,9 @@ data class PreProcessingDeepLearningConfig(
 )
 
 @Serializable
-data class CloudProvider(val azure: Boolean)
+data class CloudProvider(
+    val aws: Boolean,
+    val azure: Boolean)
 
 @Serializable
 data class Config(

@@ -27,6 +27,7 @@ import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.slf4j.LoggerFactory
 import postgres.*
 import java.io.File
+import java.io.FileNotFoundException
 
 
 abstract class TrainingPipeline(val cfg: Config) {
@@ -45,12 +46,6 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
         logger.info("Starting ensemble training pipeline...")
         val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
 
-        downloadFileFromS3(
-            bucketName = S3_BUCKET_NAME,
-            keyName = RAW_DATA_FILE,
-            path = PATH_TO_DATASET,
-        )
-
         if (!File(PATH_TO_DATASET).exists() && cfg.cloudProvider.azure) {
             logger.info("Downloading original dataset from Blob...")
             val blobClient = getBlobClientConnection(
@@ -59,6 +54,17 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
                 fileName = RAW_FILE_NAME,
             )
             downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+        } else if (!File(PATH_TO_DATASET).exists() && cfg.cloudProvider.aws) {
+            logger.info("Downloading original dataset from S3...")
+            downloadFileFromS3(
+                bucketName = S3_BUCKET_NAME,
+                keyName = RAW_DATA_FILE,
+                path = PATH_TO_DATASET,
+            )
+        }
+
+        if (!File(PATH_TO_DATASET).exists()) {
+            throw FileNotFoundException("Dataset not found!")
         }
 
         val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)

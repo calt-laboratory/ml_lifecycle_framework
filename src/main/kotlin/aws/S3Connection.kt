@@ -26,7 +26,7 @@ suspend fun downloadFileFromS3(bucketName: String, keyName: String, path: String
         s3.getObject(request) { response ->
             val myFile = File(path)
             response.body?.writeToFile(myFile)
-            println("Succecfully downloaded file from S3 $bucketName to $path")
+            println("Successfully downloaded file from S3 $bucketName to $path")
         }
     }
 }
