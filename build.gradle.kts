@@ -50,10 +50,8 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.20.0") {
         exclude(group = "org.apache.logging.log4j")
     }
-    implementation("org.apache.logging.log4j:log4j-core:2.20.0") {
-        exclude(group = "org.apache.logging.log4j")
-    }
     implementation("ch.qos.logback:logback-classic:1.4.13")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+    implementation("aws.sdk.kotlin:s3:1.0.59")
     testImplementation(kotlin("test"))
 }

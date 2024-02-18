@@ -1,5 +1,6 @@
 package training
 
+import aws.downloadFileFromS3
 import azure.downloadFileFromBlob
 import azure.getBlobClientConnection
 import azure.uploadFileToBlob
@@ -43,6 +44,12 @@ class EnsembleTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Training
     override fun execute() = runBlocking {
         logger.info("Starting ensemble training pipeline...")
         val storageConnectionString = System.getenv("STORAGE_CONNECTION_STRING")
+
+        downloadFileFromS3(
+            bucketName = S3_BUCKET_NAME,
+            keyName = RAW_DATA_FILE,
+            path = PATH_TO_DATASET,
+        )
 
         if (!File(PATH_TO_DATASET).exists() && cfg.cloudProvider.azure) {
             logger.info("Downloading original dataset from Blob...")
