@@ -18,4 +18,6 @@ Further used libraries:
 - **Kotlin DataFrame**
   - for data preprocessing
 - **Azure SDK** (Java)
-  - for data storage 
+  - for data storage on Blob
+- **AWS SDK Kotlin**
+  - for data storage on S3

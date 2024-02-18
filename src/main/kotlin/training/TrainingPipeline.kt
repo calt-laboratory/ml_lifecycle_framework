@@ -384,6 +384,17 @@ class DeepLearningTrainingPipeline(cfg: Config, val algorithm: Algorithm) : Trai
                 fileName = RAW_FILE_NAME,
             )
             downloadFileFromBlob(blobClient = blobClient, filePath = PATH_TO_DATASET)
+        } else if (!File(PATH_TO_DATASET).exists() && cfg.cloudProvider.aws) {
+            logger.info("Downloading original dataset from S3...")
+            downloadFileFromS3(
+                bucketName = S3_BUCKET_NAME,
+                keyName = RAW_DATA_FILE,
+                path = PATH_TO_DATASET,
+            )
+        }
+
+        if (!File(PATH_TO_DATASET).exists()) {
+            throw FileNotFoundException("Dataset not found!")
         }
 
         val data = readCSVAsKotlinDF(path = PATH_TO_DATASET)
